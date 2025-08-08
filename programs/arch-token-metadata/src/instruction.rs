@@ -18,8 +18,8 @@ pub enum MetadataInstruction {
         image: String,
         /// The description of the token
         description: String,
-        /// Optional update authority for the metadata
-        update_authority: Option<Pubkey>,
+        /// If true, metadata is immutable (no updates allowed)
+        immutable: bool,
     },
     /// Update core metadata
     UpdateMetadata {
@@ -70,14 +70,14 @@ pub fn create_metadata(
     symbol: String,
     image: String,
     description: String,
-    update_authority: Option<Pubkey>,
+    immutable: bool,
 ) -> Result<Instruction, ProgramError> {
     let data = MetadataInstruction::CreateMetadata {
         name,
         symbol,
         image,
         description,
-        update_authority,
+        immutable,
     }
     .pack();
 

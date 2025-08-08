@@ -6,12 +6,10 @@ async fn deploy_test() {
     TestRunner::run(|ctx| async move {
         // Generate keypairs
         let (authority_kp, _authority_pubkey, _) = ctx.generate_new_keypair();
-        let (program_kp, program_id, _) = ctx.generate_new_keypair();
-
-        // Fund the authority for deployment
         ctx.fund_keypair_with_faucet(&authority_kp).await?;
 
         // Deploy the program ELF
+        let (program_kp, program_id, _) = ctx.generate_new_keypair();
         ctx.deploy_program(program_kp, authority_kp, ARCH_TOKEN_METADATA_ELF)
             .await?;
 

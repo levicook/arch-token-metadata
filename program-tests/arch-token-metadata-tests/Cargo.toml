@@ -6,6 +6,13 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+anyhow.workspace = true
+apl-token = { workspace = true, features = ["no-entrypoint"] }
+arch_program.workspace = true
 arch_sdk.workspace = true
 arch_testing.workspace = true
+arch_token_metadata = { workspace = true, features = ["no-entrypoint"] }
+serial_test.workspace = true
 tokio.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true

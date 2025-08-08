@@ -1,9 +1,10 @@
 [package]
-name = "arch-token-metadata"
+name = "arch_token_metadata"
 edition.workspace = true
 version.workspace = true
 
 [dependencies]
+apl-token = { workspace = true, default-features = false, features = ["no-entrypoint"] }
 arch_program.workspace = true
 borsh.workspace = true
 num-derive.workspace = true
@@ -12,6 +13,7 @@ thiserror.workspace = true
 
 [lib]
 crate-type = ["cdylib", "lib"]
+name = "arch_token_metadata"
 
 [features]
 default = []
