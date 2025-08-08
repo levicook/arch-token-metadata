@@ -1,0 +1,89 @@
+//! Instruction types
+
+use {
+    arch_program::{instruction::Instruction, program_error::ProgramError, pubkey::Pubkey},
+    borsh::{BorshDeserialize, BorshSerialize},
+};
+
+/// Instructions supported by the token metadata program.
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, PartialEq)]
+pub enum MetadataInstruction {
+    /// Create core metadata for a token
+    CreateMetadata {
+        /// The name of the token
+        name: String,
+        /// The symbol of the token
+        symbol: String,
+        /// The image URI for the token
+        image: String,
+        /// The description of the token
+        description: String,
+        /// Optional update authority for the metadata
+        update_authority: Option<Pubkey>,
+    },
+    /// Update core metadata
+    UpdateMetadata {
+        /// Optional new name for the token
+        name: Option<String>,
+        /// Optional new symbol for the token
+        symbol: Option<String>,
+        /// Optional new image URI for the token
+        image: Option<String>,
+        /// Optional new description for the token
+        description: Option<String>,
+    },
+    /// Create metadata attributes
+    CreateAttributes {
+        /// Key-value pairs for extensible attributes
+        data: Vec<(String, String)>,
+    },
+    /// Update metadata attributes
+    UpdateAttributes {
+        /// Key-value pairs for extensible attributes
+        data: Vec<(String, String)>,
+    },
+    /// Transfer update authority
+    TransferAuthority {
+        /// New authority to transfer to
+        new_authority: Option<Pubkey>,
+    },
+}
+
+impl MetadataInstruction {
+    /// Unpack a byte array into a MetadataInstruction
+    pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
+        borsh::from_slice(input).map_err(|_| ProgramError::InvalidInstructionData)
+    }
+
+    /// Pack the MetadataInstruction into a byte array
+    pub fn pack(&self) -> Vec<u8> {
+        borsh::to_vec(self).unwrap()
+    }
+}
+
+// Helper functions for creating instructions
+/// Create a metadata instruction
+pub fn create_metadata(
+    program_id: &Pubkey,
+    _mint: &Pubkey,
+    name: String,
+    symbol: String,
+    image: String,
+    description: String,
+    update_authority: Option<Pubkey>,
+) -> Result<Instruction, ProgramError> {
+    let data = MetadataInstruction::CreateMetadata {
+        name,
+        symbol,
+        image,
+        description,
+        update_authority,
+    }
+    .pack();
+
+    Ok(Instruction {
+        program_id: *program_id,
+        accounts: vec![], // Will be filled by processor
+        data,
+    })
+}

@@ -1,0 +1,11 @@
+[package]
+name = "arch-token-metadata-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+arch_sdk.workspace = true
+arch_testing.workspace = true
+tokio.workspace = true

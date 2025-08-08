@@ -1,0 +1,18 @@
+[package]
+name = "arch-token-metadata"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+arch_program.workspace = true
+borsh.workspace = true
+num-derive.workspace = true
+num-traits.workspace = true
+thiserror.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+no-entrypoint = []
