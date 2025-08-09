@@ -7,19 +7,194 @@ use arch_program::{
     system_instruction,
 };
 use arch_sdk::Status;
-use arch_testing::{TestContext, TestRunner};
+use arch_testing::TestRunner;
 use arch_token_metadata::find_metadata_pda_with_program;
 use arch_token_metadata::instruction::MetadataInstruction;
 use arch_token_metadata::state::TokenMetadata;
-use arch_token_metadata_tests::ARCH_TOKEN_METADATA_ELF;
+use arch_token_metadata_tests::deploy_token_metadata_program;
 use serial_test::serial;
+
+// Mint authority rotation: after rotating A -> B, old A must fail
+#[tokio::test]
+#[serial]
+async fn create_metadata_mint_authority_rotation_old_fails() {
+    TestRunner::run(|ctx| async move {
+        let program_id = deploy_token_metadata_program(&ctx).await?;
+
+        let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
+        ctx.fund_keypair_with_faucet(&payer_kp).await?;
+
+        // old authority A and new authority B
+        let (auth_a_kp, auth_a_pk, _) = ctx.generate_new_keypair();
+        ctx.fund_keypair_with_faucet(&auth_a_kp).await?;
+        let (auth_b_kp, auth_b_pk, _) = ctx.generate_new_keypair();
+        ctx.fund_keypair_with_faucet(&auth_b_kp).await?;
+
+        // Create mint with A as mint authority
+        let (mint_kp, mint_pk, _) = ctx.generate_new_keypair();
+        let (metadata_pda, _bump) = find_metadata_pda_with_program(&program_id, &mint_pk);
+
+        let create_mint_ix = system_instruction::create_account(
+            &payer_pk,
+            &mint_pk,
+            MIN_ACCOUNT_LAMPORTS,
+            apl_token::state::Mint::LEN as u64,
+            &apl_token::id(),
+        );
+        let init_mint_ix = apl_token::instruction::initialize_mint2(
+            &apl_token::id(),
+            &mint_pk,
+            &auth_a_pk,
+            None,
+            9,
+        )?;
+
+        // Rotate mint authority A -> B, signed by A
+        let rotate_to_b_ix = apl_token::instruction::set_authority(
+            &apl_token::id(),
+            &mint_pk,
+            Some(&auth_b_pk),
+            apl_token::instruction::AuthorityType::MintTokens,
+            &auth_a_pk,
+            &[],
+        )?;
+
+        // Now try to create metadata signed by OLD authority A (should fail)
+        let ix_data = MetadataInstruction::CreateMetadata {
+            name: "RotateOldFail".to_string(),
+            symbol: "ROF".to_string(),
+            image: "https://example.com/rof.png".to_string(),
+            description: "old fails".to_string(),
+            immutable: false,
+        };
+        let data = ix_data.pack();
+        let accounts = vec![
+            AccountMeta::new(payer_pk, true),
+            AccountMeta::new_readonly(Pubkey::system_program(), false),
+            AccountMeta::new_readonly(mint_pk, false),
+            AccountMeta::new(metadata_pda, false),
+            AccountMeta::new_readonly(auth_a_pk, true),
+        ];
+        let metadata_ix = Instruction {
+            program_id,
+            accounts,
+            data,
+        };
+
+        let recent = ctx.get_recent_blockhash().await?;
+        let message = ArchMessage::new(
+            &[create_mint_ix, init_mint_ix, rotate_to_b_ix, metadata_ix],
+            Some(payer_pk),
+            recent.parse()?,
+        );
+        let tx = ctx
+            .build_and_sign_transaction(message, vec![payer_kp, mint_kp, auth_a_kp])
+            .await?;
+        let txid = ctx.send_transaction(tx).await?;
+        let res = ctx.wait_for_transaction(&txid).await?;
+        assert!(matches!(res.status, Status::Failed(_)));
+        Ok(())
+    })
+    .await
+}
+
+// Mint authority rotation: after rotating A -> B, new B must succeed
+#[tokio::test]
+#[serial]
+async fn create_metadata_mint_authority_rotation_new_succeeds() {
+    TestRunner::run(|ctx| async move {
+        let program_id = deploy_token_metadata_program(&ctx).await?;
+
+        let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
+        ctx.fund_keypair_with_faucet(&payer_kp).await?;
+
+        // old authority A and new authority B
+        let (auth_a_kp, auth_a_pk, _) = ctx.generate_new_keypair();
+        ctx.fund_keypair_with_faucet(&auth_a_kp).await?;
+
+        let (auth_b_kp, auth_b_pk, _) = ctx.generate_new_keypair();
+        ctx.fund_keypair_with_faucet(&auth_b_kp).await?;
+
+        // Create mint with A as mint authority
+        let (mint_kp, mint_pk, _) = ctx.generate_new_keypair();
+        let (metadata_pda, _bump) = find_metadata_pda_with_program(&program_id, &mint_pk);
+
+        let create_mint_ix = system_instruction::create_account(
+            &payer_pk,
+            &mint_pk,
+            MIN_ACCOUNT_LAMPORTS,
+            apl_token::state::Mint::LEN as u64,
+            &apl_token::id(),
+        );
+        let init_mint_ix = apl_token::instruction::initialize_mint2(
+            &apl_token::id(),
+            &mint_pk,
+            &auth_a_pk,
+            None,
+            9,
+        )?;
+
+        // Rotate mint authority A -> B, signed by A
+        let rotate_to_b_ix = apl_token::instruction::set_authority(
+            &apl_token::id(),
+            &mint_pk,
+            Some(&auth_b_pk),
+            apl_token::instruction::AuthorityType::MintTokens,
+            &auth_a_pk,
+            &[],
+        )?;
+
+        // Now create metadata signed by NEW authority B (should succeed)
+        let ix_data = MetadataInstruction::CreateMetadata {
+            name: "RotateNewOk".to_string(),
+            symbol: "RNO".to_string(),
+            image: "https://example.com/rno.png".to_string(),
+            description: "new ok".to_string(),
+            immutable: false,
+        };
+        let data = ix_data.pack();
+        let accounts = vec![
+            AccountMeta::new(payer_pk, true),
+            AccountMeta::new_readonly(Pubkey::system_program(), false),
+            AccountMeta::new_readonly(mint_pk, false),
+            AccountMeta::new(metadata_pda, false),
+            AccountMeta::new_readonly(auth_b_pk, true),
+        ];
+        let metadata_ix = Instruction {
+            program_id,
+            accounts,
+            data,
+        };
+
+        let recent = ctx.get_recent_blockhash().await?;
+        let message = ArchMessage::new(
+            &[create_mint_ix, init_mint_ix, rotate_to_b_ix, metadata_ix],
+            Some(payer_pk),
+            recent.parse()?,
+        );
+        let tx = ctx
+            .build_and_sign_transaction(message, vec![payer_kp, mint_kp, auth_a_kp, auth_b_kp])
+            .await?;
+        let txid = ctx.send_transaction(tx).await?;
+        let res = ctx.wait_for_transaction(&txid).await?;
+        assert_eq!(res.status, Status::Processed);
+
+        let acct = ctx.read_account_info(metadata_pda).await?;
+        let md = TokenMetadata::unpack(&acct.data).expect("unpack metadata");
+        assert!(md.is_initialized);
+        assert_eq!(md.mint, mint_pk);
+        assert_eq!(md.update_authority, Some(auth_b_pk));
+        Ok(())
+    })
+    .await
+}
 
 // If mint_authority exists, freeze authority cannot be used to create metadata
 #[tokio::test]
 #[serial]
 async fn create_metadata_freeze_auth_rejected_when_mint_auth_present() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
         let (freeze_kp, freeze_pk, _) = ctx.generate_new_keypair();
@@ -86,7 +261,7 @@ async fn create_metadata_freeze_auth_rejected_when_mint_auth_present() {
 #[serial]
 async fn create_metadata_no_authority_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
 
@@ -161,7 +336,7 @@ async fn create_metadata_no_authority_fails() {
 #[serial]
 async fn create_metadata_mint_authority_success() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         let (mint_kp, mint_pk, _) = ctx.generate_new_keypair();
@@ -257,7 +432,7 @@ async fn create_metadata_mint_authority_success() {
 #[serial]
 async fn create_metadata_freeze_authority_success() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -355,7 +530,7 @@ async fn create_metadata_freeze_authority_success() {
 #[serial]
 async fn create_metadata_wrong_signer_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         // Failure when wrong signer tries to create metadata
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
@@ -425,7 +600,7 @@ async fn create_metadata_wrong_signer_fails() {
 #[serial]
 async fn create_metadata_duplicate_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
         // Failure on duplicate create
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -505,7 +680,7 @@ async fn create_metadata_duplicate_fails() {
 #[serial]
 async fn create_metadata_immutable_success() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         // Immutable success: update_authority must be None
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
@@ -576,7 +751,7 @@ async fn create_metadata_immutable_success() {
 #[serial]
 async fn create_metadata_wrong_system_program_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
         // Wrong system program fails
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -643,7 +818,7 @@ async fn create_metadata_wrong_system_program_fails() {
 #[serial]
 async fn create_metadata_mint_wrong_owner_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -702,7 +877,7 @@ async fn create_metadata_mint_wrong_owner_fails() {
 #[serial]
 async fn create_metadata_uninitialized_mint_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
         let (mint_kp, mint_pk, _) = ctx.generate_new_keypair();
@@ -760,7 +935,7 @@ async fn create_metadata_uninitialized_mint_fails() {
 #[serial]
 async fn create_metadata_pda_mismatch_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -841,7 +1016,7 @@ async fn create_metadata_pda_mismatch_fails() {
 #[serial]
 async fn create_metadata_field_caps_exceeded_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         // Field caps exceeded fails for name and symbol (sample); extend similarly for image/description
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
@@ -932,7 +1107,7 @@ async fn create_metadata_field_caps_exceeded_fails() {
 #[serial]
 async fn create_metadata_image_length_exceeded_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -998,7 +1173,7 @@ async fn create_metadata_image_length_exceeded_fails() {
 #[serial]
 async fn create_metadata_description_length_exceeded_fails() {
     TestRunner::run(|ctx| async move {
-        let program_id = deploy_program(&ctx).await?;
+        let program_id = deploy_token_metadata_program(&ctx).await?;
 
         let (payer_kp, payer_pk, _) = ctx.generate_new_keypair();
         ctx.fund_keypair_with_faucet(&payer_kp).await?;
@@ -1057,16 +1232,4 @@ async fn create_metadata_description_length_exceeded_fails() {
         Ok(())
     })
     .await
-}
-
-// helper function to deploy the program and return the deployed program id
-async fn deploy_program(ctx: &TestContext) -> anyhow::Result<Pubkey> {
-    let (deployer_kp, _deployer_pk, _) = ctx.generate_new_keypair();
-    ctx.fund_keypair_with_faucet(&deployer_kp).await?;
-
-    let (program_kp, program_id, _) = ctx.generate_new_keypair();
-    ctx.deploy_program(program_kp, deployer_kp, ARCH_TOKEN_METADATA_ELF)
-        .await?;
-
-    Ok(program_id)
 }

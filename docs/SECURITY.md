@@ -28,36 +28,51 @@ Instruction invariants
   - Not already initialized: metadata account must be zero-initialized (first byte == 0)
   - Additional checks: payer must be a signer; system_program must match canonical ID
 
-- UpdateMetadata (to be implemented)
+- UpdateMetadata
 
   - Accounts: [mint, metadata_pda (writable), update_authority (signer)]
   - PDA checks as above
   - Stored update_authority must be Some and match signer
   - Field caps re-validated; partial updates only
 
-- CreateAttributes (to be implemented)
+- CreateAttributes
 
-  - Accounts: [mint, attributes_pda (writable), mint_authority (signer)]
+  - Accounts (strict order):
+    - payer (writable, signer)
+    - system_program (readonly)
+    - mint (readonly, owned by Token program; must match metadata.mint)
+    - attributes_pda (writable)
+    - update_authority (readonly, signer)
+    - metadata_pda (readonly)
   - PDA checks as above
-  - Key/value caps: key<=64, value<=512, entries<=32; no empty keys/values
+  - Key/value caps: key<=64, value<=240, entries<=32; no empty keys/values
+  - Size/creation constraints:
+    - Program creates attributes PDA via CPI using invoke_signed with seeds ["attributes", mint, bump]
+    - Allocation should respect runtime per-instruction growth limits (10KB). Allocate minimal required on first creation; later writes must not reallocate
   - Not already initialized
 
-- ReplaceAttributes (to be implemented)
+- ReplaceAttributes
 
   - Accounts: [mint, attributes_pda (writable), metadata_pda (readonly), update_authority (signer)]
   - PDA checks as above
   - Stored update_authority in metadata must be Some and match signer
-  - Replace whole vector; caps re-validated
+  - Replace whole vector; caps re-validated (key<=64, value<=240, entries<=32)
+  - No reallocation during update; account size must remain unchanged
 
-- TransferAuthority (to be implemented)
-  - Accounts: [mint, metadata_pda (writable), current_update_authority (signer)]
-  - PDA checks as above
+- TransferAuthority
+  - Accounts: [metadata_pda (writable), current_update_authority (signer)]
   - Stored update_authority must be Some and match signer
-  - Set to new authority (Some) or None (immutable)
+  - Set to new authority (Some)
+
+- MakeImmutable
+  - Accounts: [metadata_pda (writable), current_update_authority (signer)]
+  - Stored update_authority must be Some and match signer
+  - Set update_authority = None (irreversible)
 
 Common
 
 - All PDAs derived using seeds ["metadata"|"attributes", mint]
 - Create PDAs via CPI only; client preallocation is not supported for PDAs. Allow idempotent writes when PDA already exists and is zero-initialized.
+- Attribute limits profile (fits under 10KB growth per instruction): MAX_ATTRIBUTES=32, MAX_KEY_LENGTH=64, MAX_VALUE_LENGTH=240
 - Prevent re-initialization
 - Cross-check mints for all related accounts (owned by Token program and initialized where applicable)

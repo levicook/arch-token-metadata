@@ -91,6 +91,7 @@ dependencies = [
  "arch_sdk",
  "arch_testing",
  "arch_token_metadata",
+ "bitcoin 0.32.5",
  "serial_test",
  "tokio",
  "tracing",

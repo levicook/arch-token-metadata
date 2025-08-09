@@ -25,7 +25,7 @@ pub const DESCRIPTION_MAX_LEN: usize = 512;
 pub const MAX_KEY_LENGTH: usize = 64;
 
 /// Maximum length for attribute value
-pub const MAX_VALUE_LENGTH: usize = 512;
+pub const MAX_VALUE_LENGTH: usize = 240;
 
 /// Maximum number of attributes
 pub const MAX_ATTRIBUTES: usize = 32;

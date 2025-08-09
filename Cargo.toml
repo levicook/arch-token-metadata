@@ -26,6 +26,7 @@ arch_token_metadata = { path = "programs/arch-token-metadata" }
 # External dependencies
 anyhow = "1"
 borsh = "1.5"
+bitcoin = "0.32"
 num-derive = "0.4"
 num-traits = "0.2"
 serial_test = "3.2"

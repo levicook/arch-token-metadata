@@ -7,8 +7,8 @@ Phase 1 – Core (current)
 
 Phase 2 – Core updates
 - Implement UpdateMetadata with authority enforcement
-- Implement CreateAttributes and ReplaceAttributes
-- Implement TransferAuthority
+- Implement CreateAttributes and ReplaceAttributes (attributes: A=32, K=64, V=240; respect 10KB limit)
+- Implement TransferAuthority and MakeImmutable as separate instructions
 - Expand tests to cover all invariants in SECURITY.md
 
 Phase 3 – Convenience and DX
@@ -20,5 +20,6 @@ Phase 4 – Docs and integration
 - Add examples and integration guides
 - Benchmarks and compute/cost sizing guidance
 - Document e2e test coverage goals in tests
+- Document PDA-only creation for metadata/attributes and attribute sizing rationale (10KB per-instruction growth)
 
 

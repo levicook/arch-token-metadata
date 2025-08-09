@@ -3,9 +3,13 @@
 use {
     crate::{
         error::MetadataError,
-        find_metadata_pda_with_program,
+        find_attributes_pda_with_program, find_metadata_pda_with_program,
         instruction::MetadataInstruction,
-        state::{TokenMetadata, DESCRIPTION_MAX_LEN, IMAGE_MAX_LEN, NAME_MAX_LEN, SYMBOL_MAX_LEN},
+        state::{
+            TokenMetadata, TokenMetadataAttributes, DESCRIPTION_MAX_LEN, IMAGE_MAX_LEN,
+            MAX_ATTRIBUTES, MAX_KEY_LENGTH, MAX_VALUE_LENGTH, NAME_MAX_LEN, SYMBOL_MAX_LEN,
+        },
+        ATTRIBUTES_SEED, METADATA_SEED,
     },
     apl_token::{self, state::Mint},
     arch_program::{
@@ -17,7 +21,7 @@ use {
         program_option::COption,
         program_pack::{IsInitialized, Pack},
         pubkey::Pubkey,
-        system_instruction,
+        system_instruction::create_account,
     },
 };
 
@@ -40,39 +44,33 @@ impl Processor {
                 image,
                 description,
                 immutable,
-            } => {
-                msg!("Instruction: CreateMetadata");
-                Self::process_create_metadata(
-                    program_id,
-                    accounts,
-                    name,
-                    symbol,
-                    image,
-                    description,
-                    immutable,
-                )
-            }
+            } => Self::process_create_metadata(
+                program_id,
+                accounts,
+                name,
+                symbol,
+                image,
+                description,
+                immutable,
+            ),
             MetadataInstruction::UpdateMetadata {
                 name,
                 symbol,
                 image,
                 description,
-            } => {
-                msg!("Instruction: UpdateMetadata");
-                Self::process_update_metadata(accounts, name, symbol, image, description)
-            }
+            } => Self::process_update_metadata(accounts, name, symbol, image, description),
             MetadataInstruction::CreateAttributes { data } => {
-                msg!("Instruction: CreateAttributes");
-                Self::process_create_attributes(accounts, data)
+                Self::process_create_attributes(program_id, accounts, data)
             }
-            MetadataInstruction::UpdateAttributes { data } => {
-                msg!("Instruction: UpdateAttributes");
-                Self::process_update_attributes(accounts, data)
+            MetadataInstruction::ReplaceAttributes { data } => {
+                Self::process_replace_attributes(program_id, accounts, data)
             }
+
             MetadataInstruction::TransferAuthority { new_authority } => {
-                msg!("Instruction: TransferAuthority");
                 Self::process_transfer_authority(accounts, new_authority)
             }
+
+            MetadataInstruction::MakeImmutable => Self::process_make_immutable(accounts),
         }
     }
 
@@ -144,13 +142,33 @@ impl Processor {
         }
 
         // Validate the metadata PDA address
-        let (expected_pda, bump) = find_metadata_pda_with_program(program_id, mint_info.key);
-        if !cmp_pubkeys(&expected_pda, metadata_info.key) {
+        let (expected_md_pda, md_bump) = find_metadata_pda_with_program(program_id, mint_info.key);
+        if !cmp_pubkeys(&expected_md_pda, metadata_info.key) {
             msg!("Metadata PDA does not match expected PDA");
             return Err(ProgramError::InvalidSeeds);
         }
 
-        // If not owned by this program, create via CPI using PDA seeds
+        // Validate field sizes
+        if name.len() > NAME_MAX_LEN
+            || symbol.len() > SYMBOL_MAX_LEN
+            || image.len() > IMAGE_MAX_LEN
+            || description.len() > DESCRIPTION_MAX_LEN
+        {
+            msg!(
+                "Metadata field size is too long: name={}/{}, symbol={}/{}, image={}/{}, description={}/{}",
+                name.len(),
+                NAME_MAX_LEN,
+                symbol.len(),
+                SYMBOL_MAX_LEN,
+                image.len(),
+                IMAGE_MAX_LEN,
+                description.len(),
+                DESCRIPTION_MAX_LEN,
+            );
+            return Err(MetadataError::StringTooLong.into());
+        }
+
+        // If not owned by this program, create metadata PDA via CPI using PDA seeds
         if metadata_info.owner != program_id {
             // Require correct system program id
             if *system_program_info.key != Pubkey::system_program() {
@@ -165,32 +183,26 @@ impl Processor {
 
             let space = TokenMetadata::LEN as u64;
             let lamports = MIN_ACCOUNT_LAMPORTS;
-            let create_ix = system_instruction::create_account(
-                payer_info.key,
-                metadata_info.key,
-                lamports,
-                space,
-                program_id,
-            );
 
             invoke_signed(
-                &create_ix,
+                &create_account(
+                    payer_info.key,
+                    metadata_info.key,
+                    lamports,
+                    space,
+                    program_id,
+                ),
                 &[
                     payer_info.clone(),
                     metadata_info.clone(),
                     system_program_info.clone(),
                 ],
-                &[&[b"metadata", mint_info.key.as_ref(), &[bump]]],
+                &[&[
+                    METADATA_SEED, //
+                    mint_info.key.as_ref(),
+                    &[md_bump],
+                ]],
             )?;
-        }
-
-        // Validate field sizes
-        if name.len() > NAME_MAX_LEN
-            || symbol.len() > SYMBOL_MAX_LEN
-            || image.len() > IMAGE_MAX_LEN
-            || description.len() > DESCRIPTION_MAX_LEN
-        {
-            return Err(MetadataError::StringTooLong.into());
         }
 
         // Ensure not already initialized (zero-initialized account will have first byte == 0)
@@ -213,45 +225,343 @@ impl Processor {
         };
 
         metadata.pack_into_slice(&mut metadata_info.data.borrow_mut());
+
         Ok(())
     }
 
     fn process_update_metadata(
-        _accounts: &[AccountInfo],
-        _name: Option<String>,
-        _symbol: Option<String>,
-        _image: Option<String>,
-        _description: Option<String>,
+        accounts: &[AccountInfo],
+        name: Option<String>,
+        symbol: Option<String>,
+        image: Option<String>,
+        description: Option<String>,
     ) -> ProgramResult {
-        // TODO: Implement update logic
-        msg!("Update metadata not yet implemented");
+        let account_info_iter = &mut accounts.iter();
+        let metadata_info = next_account_info(account_info_iter)?; // [writable]
+        let update_authority_info = next_account_info(account_info_iter)?; // [signer]
+
+        if !update_authority_info.is_signer {
+            msg!("Update authority is not a signer");
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+
+        // Load existing metadata
+        let mut metadata = TokenMetadata::unpack(&metadata_info.data.borrow())
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+
+        if !metadata.is_initialized() {
+            msg!("Metadata not initialized");
+            return Err(ProgramError::UninitializedAccount);
+        }
+
+        // Enforce update authority (immutable if None)
+        match metadata.update_authority {
+            Some(current_auth) => {
+                if !cmp_pubkeys(&current_auth, update_authority_info.key) {
+                    msg!("Update authority does not match");
+                    return Err(MetadataError::InvalidAuthority.into());
+                }
+            }
+            None => {
+                msg!("Metadata is immutable");
+                return Err(MetadataError::InvalidAuthority.into());
+            }
+        }
+
+        // Validate and apply optional fields
+        if let Some(ref n) = name {
+            if n.len() > NAME_MAX_LEN {
+                return Err(MetadataError::StringTooLong.into());
+            }
+        }
+        if let Some(ref s) = symbol {
+            if s.len() > SYMBOL_MAX_LEN {
+                return Err(MetadataError::StringTooLong.into());
+            }
+        }
+        if let Some(ref i) = image {
+            if i.len() > IMAGE_MAX_LEN {
+                return Err(MetadataError::StringTooLong.into());
+            }
+        }
+        if let Some(ref d) = description {
+            if d.len() > DESCRIPTION_MAX_LEN {
+                return Err(MetadataError::StringTooLong.into());
+            }
+        }
+
+        if let Some(n) = name {
+            metadata.name = n;
+        }
+        if let Some(s) = symbol {
+            metadata.symbol = s;
+        }
+        if let Some(i) = image {
+            metadata.image = i;
+        }
+        if let Some(d) = description {
+            metadata.description = d;
+        }
+
+        metadata.pack_into_slice(&mut metadata_info.data.borrow_mut());
         Ok(())
     }
 
     fn process_create_attributes(
-        _accounts: &[AccountInfo],
-        _data: Vec<(String, String)>,
+        program_id: &Pubkey,
+        accounts: &[AccountInfo],
+        data: Vec<(String, String)>,
     ) -> ProgramResult {
-        // TODO: Implement attributes creation
-        msg!("Create attributes not yet implemented");
+        let account_info_iter = &mut accounts.iter();
+        let payer_info = next_account_info(account_info_iter)?; // [writable, signer]
+        let system_program_info = next_account_info(account_info_iter)?; // []
+        let mint_info = next_account_info(account_info_iter)?; // []
+        let attributes_info = next_account_info(account_info_iter)?; // [writable]
+        let update_authority_info = next_account_info(account_info_iter)?; // [signer]
+        let metadata_info = next_account_info(account_info_iter)?; // [] (readonly)
+
+        if !payer_info.is_signer || !update_authority_info.is_signer {
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+
+        // Validate attribute PDA address using this program_id
+        let (expected_attrs_pda, attrs_bump) =
+            find_attributes_pda_with_program(program_id, mint_info.key);
+        if !cmp_pubkeys(&expected_attrs_pda, attributes_info.key) {
+            msg!("Attributes PDA does not match expected PDA");
+            return Err(ProgramError::InvalidSeeds);
+        }
+
+        // Ensure metadata exists and authority matches
+        let metadata = TokenMetadata::unpack(&metadata_info.data.borrow())
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+        if !metadata.is_initialized() || !cmp_pubkeys(&metadata.mint, mint_info.key) {
+            msg!("Metadata not initialized or mint mismatch");
+            return Err(ProgramError::InvalidAccountData);
+        }
+
+        match metadata.update_authority {
+            Some(current_auth) => {
+                if !cmp_pubkeys(&current_auth, update_authority_info.key) {
+                    msg!("Update authority does not match");
+                    return Err(MetadataError::InvalidAuthority.into());
+                }
+            }
+            None => {
+                msg!("Metadata is immutable");
+                return Err(MetadataError::InvalidAuthority.into());
+            }
+        }
+
+        // Validate vector sizes and elements
+        if data.len() > MAX_ATTRIBUTES {
+            msg!("Attributes vector size is too long: {}", data.len());
+            return Err(MetadataError::StringTooLong.into());
+        }
+        for (k, v) in &data {
+            if k.len() > MAX_KEY_LENGTH || v.len() > MAX_VALUE_LENGTH {
+                msg!(
+                    "Attribute key or value is too long: key={}/{}, value={}/{}",
+                    k.len(),
+                    MAX_KEY_LENGTH,
+                    v.len(),
+                    MAX_VALUE_LENGTH,
+                );
+                return Err(MetadataError::StringTooLong.into());
+            }
+        }
+
+        // Allocate full max size so future replacements never need reallocation
+        let required_space: u64 = TokenMetadataAttributes::LEN as u64;
+
+        if attributes_info.owner != program_id {
+            if *system_program_info.key != Pubkey::system_program() {
+                msg!("System program id does not match expected system program id");
+                return Err(ProgramError::IncorrectProgramId);
+            }
+            if !payer_info.is_signer {
+                msg!("Payer is not a signer");
+                return Err(ProgramError::MissingRequiredSignature);
+            }
+            let lamports = MIN_ACCOUNT_LAMPORTS;
+
+            invoke_signed(
+                &create_account(
+                    payer_info.key,
+                    attributes_info.key,
+                    lamports,
+                    required_space,
+                    program_id,
+                ),
+                &[
+                    payer_info.clone(),
+                    attributes_info.clone(),
+                    system_program_info.clone(),
+                ],
+                &[&[
+                    ATTRIBUTES_SEED, //
+                    mint_info.key.as_ref(),
+                    &[attrs_bump],
+                ]],
+            )?;
+        } else {
+            let curr_len = attributes_info.data.borrow().len() as u64;
+            if curr_len != required_space {
+                msg!(
+                    "Attributes account size mismatch: curr={} required={}",
+                    curr_len,
+                    required_space
+                );
+                return Err(ProgramError::InvalidAccountData);
+            }
+        }
+
+        // Ensure not already initialized
+        {
+            let data_ref = attributes_info.data.borrow();
+            if !data_ref.is_empty() && data_ref[0] != 0 {
+                return Err(MetadataError::MetadataAlreadyExists.into());
+            }
+        }
+
+        let attrs = TokenMetadataAttributes {
+            is_initialized: true,
+            mint: *mint_info.key,
+            data,
+        };
+        attrs.pack_into_slice(&mut attributes_info.data.borrow_mut());
         Ok(())
     }
 
-    fn process_update_attributes(
-        _accounts: &[AccountInfo],
-        _data: Vec<(String, String)>,
+    fn process_replace_attributes(
+        program_id: &Pubkey,
+        accounts: &[AccountInfo],
+        data: Vec<(String, String)>,
     ) -> ProgramResult {
-        // TODO: Implement attributes update
-        msg!("Update attributes not yet implemented");
+        let account_info_iter = &mut accounts.iter();
+        let attributes_info = next_account_info(account_info_iter)?; // [writable]
+        let update_authority_info = next_account_info(account_info_iter)?; // [signer]
+        let metadata_info = next_account_info(account_info_iter)?; // [] (readonly)
+
+        if !update_authority_info.is_signer {
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+
+        // Validate metadata and authority
+        let metadata = TokenMetadata::unpack(&metadata_info.data.borrow())
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+        if !metadata.is_initialized() {
+            return Err(ProgramError::UninitializedAccount);
+        }
+        match metadata.update_authority {
+            Some(current_auth) => {
+                if !cmp_pubkeys(&current_auth, update_authority_info.key) {
+                    return Err(MetadataError::InvalidAuthority.into());
+                }
+            }
+            None => return Err(MetadataError::InvalidAuthority.into()),
+        }
+
+        // Validate PDA
+        let (expected_attrs_pda, _bump) =
+            find_attributes_pda_with_program(program_id, &metadata.mint);
+        if !cmp_pubkeys(&expected_attrs_pda, attributes_info.key) {
+            return Err(ProgramError::InvalidSeeds);
+        }
+
+        // Ensure attributes exist
+        let mut attrs = TokenMetadataAttributes::unpack(&attributes_info.data.borrow())
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+        if !attrs.is_initialized() {
+            return Err(ProgramError::UninitializedAccount);
+        }
+
+        // Validate sizes
+        if data.len() > MAX_ATTRIBUTES {
+            return Err(MetadataError::StringTooLong.into());
+        }
+        for (k, v) in &data {
+            if k.len() > MAX_KEY_LENGTH || v.len() > MAX_VALUE_LENGTH {
+                return Err(MetadataError::StringTooLong.into());
+            }
+        }
+
+        // Replace vector
+        attrs.data = data;
+        attrs.pack_into_slice(&mut attributes_info.data.borrow_mut());
         Ok(())
     }
 
     fn process_transfer_authority(
-        _accounts: &[AccountInfo],
-        _new_authority: Option<Pubkey>,
+        accounts: &[AccountInfo],
+        new_authority: Pubkey,
     ) -> ProgramResult {
-        // TODO: Implement authority transfer
-        msg!("Transfer authority not yet implemented");
+        let account_info_iter = &mut accounts.iter();
+        let metadata_info = next_account_info(account_info_iter)?; // [writable]
+        let current_authority_info = next_account_info(account_info_iter)?; // [signer]
+
+        if !current_authority_info.is_signer {
+            msg!("Current authority is not a signer");
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+
+        let mut metadata = TokenMetadata::unpack(&metadata_info.data.borrow())
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+        if !metadata.is_initialized() {
+            msg!("Metadata not initialized");
+            return Err(ProgramError::UninitializedAccount);
+        }
+
+        match metadata.update_authority {
+            Some(current_auth) => {
+                if !cmp_pubkeys(&current_auth, current_authority_info.key) {
+                    msg!("Signer is not current update authority");
+                    return Err(MetadataError::InvalidAuthority.into());
+                }
+            }
+            None => {
+                msg!("Metadata is immutable; cannot transfer authority");
+                return Err(MetadataError::InvalidAuthority.into());
+            }
+        }
+
+        metadata.update_authority = Some(new_authority);
+        metadata.pack_into_slice(&mut metadata_info.data.borrow_mut());
+        Ok(())
+    }
+
+    fn process_make_immutable(accounts: &[AccountInfo]) -> ProgramResult {
+        let account_info_iter = &mut accounts.iter();
+        let metadata_info = next_account_info(account_info_iter)?; // [writable]
+        let current_authority_info = next_account_info(account_info_iter)?; // [signer]
+
+        if !current_authority_info.is_signer {
+            msg!("Current authority is not a signer");
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+
+        let mut metadata = TokenMetadata::unpack(&metadata_info.data.borrow())
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+        if !metadata.is_initialized() {
+            msg!("Metadata not initialized");
+            return Err(ProgramError::UninitializedAccount);
+        }
+
+        match metadata.update_authority {
+            Some(current_auth) => {
+                if !cmp_pubkeys(&current_auth, current_authority_info.key) {
+                    msg!("Signer is not current update authority");
+                    return Err(MetadataError::InvalidAuthority.into());
+                }
+            }
+            None => {
+                msg!("Metadata already immutable");
+                return Err(MetadataError::InvalidAuthority.into());
+            }
+        }
+
+        metadata.update_authority = None;
+        metadata.pack_into_slice(&mut metadata_info.data.borrow_mut());
         Ok(())
     }
 }

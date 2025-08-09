@@ -37,16 +37,18 @@ pub enum MetadataInstruction {
         /// Key-value pairs for extensible attributes
         data: Vec<(String, String)>,
     },
-    /// Update metadata attributes
-    UpdateAttributes {
+    /// Replace metadata attributes
+    ReplaceAttributes {
         /// Key-value pairs for extensible attributes
         data: Vec<(String, String)>,
     },
-    /// Transfer update authority
+    /// Transfer update authority (must provide a new authority)
     TransferAuthority {
         /// New authority to transfer to
-        new_authority: Option<Pubkey>,
+        new_authority: Pubkey,
     },
+    /// Make metadata immutable (revoke update authority)
+    MakeImmutable,
 }
 
 impl MetadataInstruction {
