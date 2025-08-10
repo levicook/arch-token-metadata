@@ -1,5 +1,5 @@
-import { sha256 } from '@noble/hashes/sha256';
-import { secp256k1 } from '@noble/curves/secp256k1';
+import { sha256 } from "@noble/hashes/sha256";
+import { secp256k1 } from "@noble/curves/secp256k1";
 
 export type Pubkey = Uint8Array; // 32 bytes
 
@@ -16,7 +16,7 @@ export function findProgramAddress(
   seeds: Array<Uint8Array>,
   programId: Pubkey,
 ): [Pubkey, number] {
-  if (seeds.length > MAX_SEEDS) throw new Error('Max seeds exceeded');
+  if (seeds.length > MAX_SEEDS) throw new Error("Max seeds exceeded");
   let nonce = 255;
   while (nonce !== 0) {
     const seedsWithNonce = [...seeds, new Uint8Array([nonce])];
@@ -25,21 +25,28 @@ export function findProgramAddress(
       return [address, nonce];
     } catch (e) {
       if (e instanceof TypeError) throw e;
-      if (e instanceof Error && e.message === 'Invalid seeds, address must fall off the curve') {
+      if (
+        e instanceof Error &&
+        e.message === "Invalid seeds, address must fall off the curve"
+      ) {
         nonce--;
         continue;
       }
       throw e;
     }
   }
-  throw new Error('Unable to find a viable program address nonce');
+  throw new Error("Unable to find a viable program address nonce");
 }
 
-function createProgramAddress(seeds: Array<Uint8Array>, programId: Pubkey): Pubkey {
-  if (seeds.length > MAX_SEEDS) throw new Error('Max seeds exceeded');
+function createProgramAddress(
+  seeds: Array<Uint8Array>,
+  programId: Pubkey,
+): Pubkey {
+  if (seeds.length > MAX_SEEDS) throw new Error("Max seeds exceeded");
   let buffer = new Uint8Array(0);
   for (const seed of seeds) {
-    if (seed.length > MAX_SEED_LENGTH) throw new Error('Max seed length exceeded');
+    if (seed.length > MAX_SEED_LENGTH)
+      throw new Error("Max seed length exceeded");
     const concat = new Uint8Array(buffer.length + seed.length);
     concat.set(buffer, 0);
     concat.set(seed, buffer.length);
@@ -50,7 +57,8 @@ function createProgramAddress(seeds: Array<Uint8Array>, programId: Pubkey): Pubk
   withProgram.set(programId, buffer.length);
 
   const hash = sha256(withProgram);
-  if (isOnCurve(hash)) throw new Error('Invalid seeds, address must fall off the curve');
+  if (isOnCurve(hash))
+    throw new Error("Invalid seeds, address must fall off the curve");
   return hash;
 }
 
@@ -63,5 +71,3 @@ function isOnCurve(pubkey: Pubkey): boolean {
     return false;
   }
 }
-
-

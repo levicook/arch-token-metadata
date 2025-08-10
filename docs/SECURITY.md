@@ -5,7 +5,6 @@ This document lists the security requirements enforced by the Arch Token Metadat
 Instruction invariants
 
 - CreateMetadata
-
   - Accounts (strict order):
     - payer (writable, signer)
     - system_program (readonly, must equal System Program ID)
@@ -29,7 +28,6 @@ Instruction invariants
   - Additional checks: payer must be a signer; system_program must match canonical ID
 
 - UpdateMetadata
-
   - Accounts (strict order):
     - metadata_pda (writable)
     - update_authority (readonly, signer)
@@ -38,7 +36,6 @@ Instruction invariants
   - Field caps re-validated; partial updates only
 
 - CreateAttributes
-
   - Accounts (strict order):
     - payer (writable, signer)
     - system_program (readonly)
@@ -54,7 +51,6 @@ Instruction invariants
   - Not already initialized
 
 - ReplaceAttributes
-
   - Accounts (strict order):
     - attributes_pda (writable)
     - update_authority (readonly, signer)
@@ -65,7 +61,6 @@ Instruction invariants
   - No reallocation during update; account size must remain unchanged
 
 - TransferAuthority
-
   - Accounts: [metadata_pda (writable), current_update_authority (signer)]
   - Stored update_authority must be Some and match signer
   - Set to new authority (Some)

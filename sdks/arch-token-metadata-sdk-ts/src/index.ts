@@ -62,12 +62,12 @@ function concat(parts: Uint8Array[]): Uint8Array {
 }
 
 function encodeVecTupleStringString(
-  items: Array<[string, string]>
+  items: Array<[string, string]>,
 ): Uint8Array {
   const len = new Uint8Array(4);
   new DataView(len.buffer).setUint32(0, items.length, true);
   const rest = items.map(([k, v]) =>
-    concat([encodeString(k), encodeString(v)])
+    concat([encodeString(k), encodeString(v)]),
   );
   return concat([len, ...rest]);
 }
@@ -110,7 +110,7 @@ export class TokenMetadataClient {
     name: string,
     symbol: string,
     image: string,
-    description: string
+    description: string,
   ) {
     if (name.length > NAME_MAX_LEN) throw new Error("name too long");
     if (symbol.length > SYMBOL_MAX_LEN) throw new Error("symbol too long");
@@ -150,7 +150,7 @@ export class TokenMetadataClient {
       params.name,
       params.symbol,
       params.image,
-      params.description
+      params.description,
     );
     const variant = new Uint8Array([IX_CREATE_METADATA]);
     const body = concat([
@@ -289,7 +289,7 @@ export class TokenMetadataClient {
   }
   /** Transfer authority then immediately update metadata (two instructions). */
   transferAuthorityThenUpdateTx(
-    params: TransferAuthorityThenUpdateParams
+    params: TransferAuthorityThenUpdateParams,
   ): Instruction[] {
     const transfer = this.transferAuthorityIx({
       mint: params.mint,
@@ -312,7 +312,7 @@ export class TokenMetadataClient {
 
   /** Upstream mint init instructions + CreateMetadata. */
   createTokenWithMetadataTx(
-    params: TxCreateTokenWithMetadataParams
+    params: TxCreateTokenWithMetadataParams,
   ): Instruction[] {
     const createMd = this.createMetadataIx({
       payer: params.payer,
@@ -342,7 +342,7 @@ export class TokenMetadataClient {
 
   /** Upstream mint init instructions + CreateMetadata + CreateAttributes. */
   createTokenWithMetadataAndAttributesTx(
-    params: TxCreateTokenWithMetadataAndAttributesParams
+    params: TxCreateTokenWithMetadataAndAttributesParams,
   ): Instruction[] {
     const createMd = this.createMetadataIx({
       payer: params.payer,
@@ -365,7 +365,7 @@ export class TokenMetadataClient {
 
   /** Same as createTokenWithMetadataAndAttributesTx plus returning PDAs. */
   createTokenWithMetadataAndAttributesTxWithPdas(
-    params: TxCreateTokenWithMetadataAndAttributesParams
+    params: TxCreateTokenWithMetadataAndAttributesParams,
   ): { instructions: Instruction[]; pdas: DerivedPdas } {
     const mdPda = this.metadataPda(params.mint);
     const attrsPda = this.attributesPda(params.mint);
@@ -378,7 +378,7 @@ export class TokenMetadataClient {
 
   /** Upstream init, then clear MintTokens authority, then CreateMetadata signed by freeze authority. */
   createTokenWithFreezeAuthMetadataTx(
-    params: TxCreateTokenWithFreezeAuthMetadataParams
+    params: TxCreateTokenWithFreezeAuthMetadataParams,
   ): Instruction[] {
     const createMd = this.createMetadataIx({
       payer: params.payer,
@@ -404,7 +404,7 @@ export class TokenMetadataClient {
     newAccount: Pubkey,
     lamports: bigint,
     space: bigint,
-    owner: Pubkey
+    owner: Pubkey,
   ): Instruction {
     // system program: discriminant=0, then lamports u64 LE, space u64 LE, owner 32B
     const tag = new Uint8Array(4);
@@ -430,7 +430,7 @@ export class TokenMetadataClient {
     payer: Pubkey,
     mint: Pubkey,
     tokenProgramId: Pubkey,
-    minAccountLamports: bigint
+    minAccountLamports: bigint,
   ): Instruction {
     // size = apl_token::state::Mint::LEN = 82
     const mintSpace = 82n;
@@ -439,7 +439,7 @@ export class TokenMetadataClient {
       mint,
       minAccountLamports,
       mintSpace,
-      tokenProgramId
+      tokenProgramId,
     );
   }
   /** Token initialize_mint2 instruction data. */
@@ -448,7 +448,7 @@ export class TokenMetadataClient {
     mint: Pubkey,
     mintAuthority: Pubkey,
     freezeAuthority: Pubkey | undefined,
-    decimals: number
+    decimals: number,
   ): Instruction {
     const tag = new Uint8Array([18]);
     const dec = new Uint8Array([decimals & 0xff]);
@@ -471,7 +471,7 @@ export class TokenMetadataClient {
     tokenProgramId: Pubkey,
     mint: Pubkey,
     currentAuthority: Pubkey,
-    newAuthority: Pubkey | undefined
+    newAuthority: Pubkey | undefined,
   ): Instruction {
     const tag = new Uint8Array([6]);
     const authorityTypeMintTokens = new Uint8Array([0]);
@@ -494,14 +494,14 @@ export class TokenMetadataClient {
 export function metadataProgramId(): Pubkey {
   return new Uint8Array(Buffer.from("arch-metadata000000000000000000")).slice(
     0,
-    32
+    32,
   ) as Pubkey;
 }
 /** APL Token program id as Pubkey. */
 export function tokenProgramId(): Pubkey {
   return new Uint8Array(Buffer.from("apl-token00000000000000000000000")).slice(
     0,
-    32
+    32,
   ) as Pubkey;
 }
 

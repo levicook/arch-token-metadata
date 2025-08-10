@@ -26,6 +26,7 @@
   },
   "workspaces": [
     "examples/arch-token-metadata-tour-ts",
-    "sdks/arch-token-metadata-sdk-ts"
+    "sdks/arch-token-metadata-sdk-ts",
+    "sdks/arch-signer-ts"
   ]
 }

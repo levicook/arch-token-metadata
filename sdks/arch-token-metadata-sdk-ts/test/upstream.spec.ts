@@ -14,8 +14,8 @@ function hexToBytes(hex: string): Uint8Array {
 describe("upstream token/system instruction data parity", () => {
   const fixtures = JSON.parse(
     readFileSync(
-      new URL("./fixtures/metadata_instructions.json", import.meta.url)
-    ).toString()
+      new URL("./fixtures/metadata_instructions.json", import.meta.url),
+    ).toString(),
   );
   const programId = hexToBytes(fixtures.ProgramId) as Pubkey;
   const tokenProgramId = hexToBytes(fixtures.TokenProgramId) as Pubkey;
@@ -29,10 +29,10 @@ describe("upstream token/system instruction data parity", () => {
       mint,
       payer,
       undefined,
-      9
+      9,
     );
     expect(Buffer.from(ix.data)).toEqual(
-      Buffer.from(hexToBytes(fixtures.TokenInitializeMint2))
+      Buffer.from(hexToBytes(fixtures.TokenInitializeMint2)),
     );
   });
 
@@ -44,7 +44,7 @@ describe("upstream token/system instruction data parity", () => {
       payer,
       mint,
       tokenProgramId,
-      minLamports
+      minLamports,
     );
     // Verify program id is system program and data has discriminant 0 + fields + owner id
     const sysId = fixtures.SystemProgram;
@@ -66,10 +66,10 @@ describe("upstream token/system instruction data parity", () => {
       tokenProgramId,
       mint,
       payer,
-      undefined
+      undefined,
     );
     expect(Buffer.from(ix.data)).toEqual(
-      Buffer.from(hexToBytes(fixtures.TokenSetAuthorityMintNone))
+      Buffer.from(hexToBytes(fixtures.TokenSetAuthorityMintNone)),
     );
   });
 
@@ -81,10 +81,10 @@ describe("upstream token/system instruction data parity", () => {
       tokenProgramId,
       mint,
       payer,
-      newAuth
+      newAuth,
     );
     expect(Buffer.from(ix.data)).toEqual(
-      Buffer.from(hexToBytes(fixtures.TokenSetAuthorityMintSome))
+      Buffer.from(hexToBytes(fixtures.TokenSetAuthorityMintSome)),
     );
   });
 });

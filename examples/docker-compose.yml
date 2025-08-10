@@ -1,5 +1,4 @@
 services:
-
   bitcoind:
     image: bitcoin/bitcoin:29.0
     container_name: bitcoind
@@ -9,20 +8,30 @@ services:
       - BITCOIN_DATA=/var/lib/bitcoin-core
     volumes:
       - ./.tmp/btcd_data:/var/lib/bitcoin-core
-    command: [
-      "bitcoind",
-      "-regtest=1",
-      "-rpcallowip=0.0.0.0/0",
-      "-datadir=/var/lib/bitcoin-core",
-      "-rpcbind=0.0.0.0",
-      "-rpcport=18443",
-      "-printtoconsole",
-      "-rpcuser=bitcoind_username",
-      "-rpcpassword=bitcoind_password",
-      "-fallbackfee=0.00000001"
-    ]
+    command:
+      [
+        "bitcoind",
+        "-regtest=1",
+        "-rpcallowip=0.0.0.0/0",
+        "-datadir=/var/lib/bitcoin-core",
+        "-rpcbind=0.0.0.0",
+        "-rpcport=18443",
+        "-printtoconsole",
+        "-rpcuser=bitcoind_username",
+        "-rpcpassword=bitcoind_password",
+        "-fallbackfee=0.00000001",
+      ]
     healthcheck:
-      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=bitcoind_username", "-rpcpassword=bitcoind_password", "-rpcconnect=127.0.0.1", "getblockchaininfo"]
+      test:
+        [
+          "CMD",
+          "bitcoin-cli",
+          "-regtest",
+          "-rpcuser=bitcoind_username",
+          "-rpcpassword=bitcoind_password",
+          "-rpcconnect=127.0.0.1",
+          "getblockchaininfo",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -36,8 +45,8 @@ services:
       bitcoind:
         condition: service_healthy
     ports:
-      - "3030:3030"  # HTTP API
-      - "8080:8080"  # TCP subscriptions
+      - "3030:3030" # HTTP API
+      - "8080:8080" # TCP subscriptions
     environment:
       - RUST_BACKTRACE=full
       - BITCOIN_RPC_URL=http://bitcoind:18443
@@ -87,4 +96,3 @@ services:
         bitcoin-cli createwallet testwallet || true; \
         bitcoin-cli -regtest -generate 150; \
         while true; do bitcoin-cli -regtest -generate 1; sleep 5; done"
-

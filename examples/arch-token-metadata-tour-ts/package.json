@@ -13,11 +13,7 @@
   "dependencies": {
     "@saturnbtcio/arch-sdk": "*",
     "arch-token-metadata-sdk": "*",
-    "bip322-js": "^3.0.0",
-    "bitcoinjs-lib": "^6.1.7",
-    "wif": "^2.0.6"
+    "arch-signer-ts": "*"
   },
-  "devDependencies": {
-    "@types/wif": "^2.0.5"
-  }
+  "devDependencies": {}
 }

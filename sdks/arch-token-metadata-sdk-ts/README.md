@@ -42,14 +42,14 @@ const createMint: Instruction = client.createMintAccountIx(
   payer,
   mint,
   tokenProgramId(),
-  1n
+  1n,
 );
 const initMint: Instruction = client.tokenInitializeMint2Ix(
   tokenProgramId(),
   mint,
   mintAuthority,
   undefined,
-  9
+  9,
 );
 
 const createMd: Instruction = client.createMetadataIx({
@@ -73,7 +73,7 @@ const recentBlockhash = await arch.rpc.getBestBlockhash();
 const message = SanitizedMessageUtil.createSanitizedMessage(
   ixs,
   payerPubkey,
-  recentBlockhash
+  recentBlockhash,
 );
 const messageHash = SanitizedMessageUtil.hash(message);
 // Sign messageHash with your wallet (BIP322), then:

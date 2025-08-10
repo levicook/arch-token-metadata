@@ -14,8 +14,8 @@ function hexToBytes(hex: string): Uint8Array {
 describe("instruction serialization matches Rust fixtures", () => {
   const fixtures = JSON.parse(
     readFileSync(
-      new URL("./fixtures/metadata_instructions.json", import.meta.url)
-    ).toString()
+      new URL("./fixtures/metadata_instructions.json", import.meta.url),
+    ).toString(),
   );
 
   const programId = hexToBytes(fixtures.ProgramId) as Pubkey;
@@ -98,8 +98,8 @@ describe("instruction serialization matches Rust fixtures", () => {
 describe("PDA and system/program id parity with Rust fixtures", () => {
   const fixtures = JSON.parse(
     readFileSync(
-      new URL("./fixtures/metadata_instructions.json", import.meta.url)
-    ).toString()
+      new URL("./fixtures/metadata_instructions.json", import.meta.url),
+    ).toString(),
   );
   const programId = hexToBytes(fixtures.ProgramId) as Pubkey;
   const client = new TokenMetadataClient(programId);
@@ -107,7 +107,7 @@ describe("PDA and system/program id parity with Rust fixtures", () => {
   it("system program id matches", () => {
     const sysHex = fixtures.SystemProgram;
     expect(Buffer.from(systemProgram())).toEqual(
-      Buffer.from(hexToBytes(sysHex))
+      Buffer.from(hexToBytes(sysHex)),
     );
   });
 
@@ -118,7 +118,7 @@ describe("PDA and system/program id parity with Rust fixtures", () => {
       const attrs = client.attributesPda(mint);
       expect(Buffer.from(md)).toEqual(Buffer.from(hexToBytes(row.metadata)));
       expect(Buffer.from(attrs)).toEqual(
-        Buffer.from(hexToBytes(row.attributes))
+        Buffer.from(hexToBytes(row.attributes)),
       );
     }
   });

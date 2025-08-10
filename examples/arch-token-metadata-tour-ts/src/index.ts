@@ -13,9 +13,7 @@ import {
   type RuntimeTransaction,
   PubkeyUtil,
 } from "@saturnbtcio/arch-sdk";
-import { Signer as Bip322Signer } from "bip322-js";
-import * as bitcoin from "bitcoinjs-lib";
-import wif from "wif";
+import { deriveP2trAddress, signBip322P2tr } from "arch-signer-ts";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import fs from "node:fs";
 import path from "node:path";
@@ -59,7 +57,7 @@ async function main() {
   const payerPrivHex = process.env.PAYER_PRIVKEY;
   if (!rpcUrl || !payerPrivHex) {
     throw new Error(
-      "Missing env. Run examples/launch.sh first to generate examples/.env"
+      "Missing env. Run examples/launch.sh first to generate examples/.env",
     );
   }
 
@@ -78,7 +76,9 @@ async function main() {
   const mintPriv = secp256k1.utils.randomPrivateKey();
   const mintFull = secp256k1.getPublicKey(mintPriv, true); // 33B compressed
   const mint = mintFull.slice(1); // 32B x-only pubkey
-  const payer = payerPubHex ? hexToBytes(payerPubHex) : secp256k1.getPublicKey(Buffer.from(payerPrivHex, "hex"), true).slice(1);
+  const payer = payerPubHex
+    ? hexToBytes(payerPubHex)
+    : secp256k1.getPublicKey(Buffer.from(payerPrivHex, "hex"), true).slice(1);
 
   const metadataPda = client.metadataPda(mint as any);
   console.log("Using PROGRAM_ID:", Buffer.from(programId).toString("hex"));
@@ -93,14 +93,14 @@ async function main() {
     payer as any,
     mint as any,
     aplTokenProgramId,
-    minLamports
+    minLamports,
   );
   const initMint: MetaInstruction = client.tokenInitializeMint2Ix(
     aplTokenProgramId,
     mint as any,
     payer as any,
     undefined,
-    9
+    9,
   );
   const createMd = client.createMetadataIx({
     payer: payer as any,
@@ -140,47 +140,29 @@ async function main() {
     data: ix.data,
   }));
   console.log(
-    "Building instructions: [create_mint_account, initialize_mint2(decimals=9), create_metadata, create_attributes]"
+    "Building instructions: [create_mint_account, initialize_mint2(decimals=9), create_metadata, create_attributes]",
   );
 
   // Build and sign message (payer + mint)
   const message = SanitizedMessageUtil.createSanitizedMessage(
     instructions,
     payer,
-    recentBlockhash
+    recentBlockhash,
   );
   if (typeof (message as any).header === "undefined") {
     throw new Error("Failed to compile message");
   }
   const msgHash = SanitizedMessageUtil.hash(message as any);
   // Produce BIP-322 signatures over the message hash for P2TR (single-key spend)
-  // Derive P2TR single-key addresses locally for payer and mint on regtest
-  const payerAddr = bitcoin.payments.p2tr({
-    internalPubkey: Buffer.from(payer),
-    network: bitcoin.networks.regtest,
-  }).address!;
-  const mintAddr = bitcoin.payments.p2tr({
-    internalPubkey: Buffer.from(mint),
-    network: bitcoin.networks.regtest,
-  }).address!;
-  // Convert raw privkeys (hex) to WIF for bip322-js. Use testnet/regtest WIF (0xEF) for tb1/bcrt1
-  const wifVersionForAddress = (address: string): number =>
-    address.startsWith("tb1") || address.startsWith("bcrt1") ? 0xef : 0x80;
-  const payerPrivWif = wif.encode(
-    wifVersionForAddress(payerAddr),
-    Buffer.from(payerPrivHex, "hex"),
-    true
+  // Derive P2TR single-key addresses locally (regtest)
+  const payerAddr = deriveP2trAddress(payer, "regtest");
+  const mintAddr = deriveP2trAddress(mint as any, "regtest");
+  const payerSigRaw = signBip322P2tr(payerPrivHex, msgHash, "regtest");
+  const mintSigRaw = signBip322P2tr(
+    Buffer.from(mintPriv).toString("hex"),
+    msgHash,
+    "regtest",
   );
-  const mintPrivHex = Buffer.from(mintPriv).toString("hex");
-  const mintPrivWif = wif.encode(
-    wifVersionForAddress(mintAddr),
-    Buffer.from(mintPrivHex, "hex"),
-    true
-  );
-  const payerSigB64 = Bip322Signer.sign(payerPrivWif, payerAddr, Buffer.from(msgHash));
-  const mintSigB64 = Bip322Signer.sign(mintPrivWif, mintAddr, Buffer.from(msgHash));
-  const payerSigRaw = Buffer.from(payerSigB64, "base64");
-  const mintSigRaw = Buffer.from(mintSigB64, "base64");
   const tx: RuntimeTransaction = {
     version: 0,
     signatures: [

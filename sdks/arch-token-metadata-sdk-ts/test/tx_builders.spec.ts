@@ -28,8 +28,8 @@ function dummyIx(programIdByte: number, dataBytes: number): Instruction {
 describe("transaction builders compose upstream instructions correctly", () => {
   const fixtures = JSON.parse(
     readFileSync(
-      new URL("./fixtures/metadata_instructions.json", import.meta.url)
-    ).toString()
+      new URL("./fixtures/metadata_instructions.json", import.meta.url),
+    ).toString(),
   );
   const programId = hexToBytes(fixtures.ProgramId) as Pubkey;
   const client = new TokenMetadataClient(programId);
@@ -58,10 +58,10 @@ describe("transaction builders compose upstream instructions correctly", () => {
     expect(ixs.length).toBe(3);
     // upstream preserved
     expect(Buffer.from(ixs[0].programId)).toEqual(
-      Buffer.from(upstream[0].programId)
+      Buffer.from(upstream[0].programId),
     );
     expect(Buffer.from(ixs[1].programId)).toEqual(
-      Buffer.from(upstream[1].programId)
+      Buffer.from(upstream[1].programId),
     );
     expect(Buffer.from(ixs[0].data)).toEqual(Buffer.from(upstream[0].data));
     expect(Buffer.from(ixs[1].data)).toEqual(Buffer.from(upstream[1].data));
@@ -93,10 +93,10 @@ describe("transaction builders compose upstream instructions correctly", () => {
     expect(ixs.length).toBe(4);
     // upstream preserved
     expect(Buffer.from(ixs[0].programId)).toEqual(
-      Buffer.from(upstream[0].programId)
+      Buffer.from(upstream[0].programId),
     );
     expect(Buffer.from(ixs[1].programId)).toEqual(
-      Buffer.from(upstream[1].programId)
+      Buffer.from(upstream[1].programId),
     );
     // check tails
     const goldenMd = hexToBytes(fixtures.CreateMetadata);
@@ -126,13 +126,13 @@ describe("transaction builders compose upstream instructions correctly", () => {
     expect(ixs.length).toBe(4);
     // order: upstream[0], upstream[1], clear, createMd
     expect(Buffer.from(ixs[0].programId)).toEqual(
-      Buffer.from(upstream[0].programId)
+      Buffer.from(upstream[0].programId),
     );
     expect(Buffer.from(ixs[1].programId)).toEqual(
-      Buffer.from(upstream[1].programId)
+      Buffer.from(upstream[1].programId),
     );
     expect(Buffer.from(ixs[2].programId)).toEqual(
-      Buffer.from(clearMintAuth.programId)
+      Buffer.from(clearMintAuth.programId),
     );
     const goldenMd = hexToBytes(fixtures.CreateMetadata);
     expect(Buffer.from(ixs[3].data)).toEqual(Buffer.from(goldenMd));
