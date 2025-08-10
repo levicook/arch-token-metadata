@@ -1,0 +1,17 @@
+[package]
+name = "arch_token_metadata_fixtures"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+apl-token = { workspace = true, features = ["no-entrypoint"] }
+anyhow.workspace = true
+arch_program.workspace = true
+arch_token_metadata = { workspace = true, features = ["no-entrypoint"] }
+borsh.workspace = true
+hex.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+
+

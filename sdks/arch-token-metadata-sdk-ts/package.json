@@ -1,0 +1,29 @@
+{
+  "name": "arch-token-metadata-sdk",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@noble/curves": "*",
+    "@noble/hashes": "*",
+    "@scure/base": "*",
+    "borsh": "*"
+  },
+  "devDependencies": {
+    "@saturnbtcio/arch-sdk": "*",
+    "typescript": "*",
+    "vitest": "*"
+  },
+  "peerDependencies": {
+    "@saturnbtcio/arch-sdk": "*"
+  }
+}
+
+

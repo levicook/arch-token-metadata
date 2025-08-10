@@ -190,6 +190,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "arch_token_metadata_fixtures"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apl-token",
+ "arch_program",
+ "arch_token_metadata",
+ "borsh",
+ "hex",
+ "serde_json",
+]
+
+[[package]]
+name = "arch_token_metadata_sdk"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apl-token",
+ "arch_program",
+ "arch_sdk",
+ "arch_token_metadata",
+ "bitcoin 0.32.5",
+]
+
+[[package]]
+name = "arch_token_metadata_tour"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apl-token",
+ "arch_program",
+ "arch_sdk",
+ "arch_token_metadata",
+ "arch_token_metadata_sdk",
+ "bitcoin 0.32.5",
+ "dotenvy",
+ "hex",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -930,6 +972,12 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "dotenvy"
+version = "0.15.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "dyn-clone"
@@ -2893,6 +2941,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "setup-payer-and-program"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apl-token",
+ "arch_program",
+ "arch_sdk",
+ "bitcoin 0.32.5",
+ "hex",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

@@ -1,0 +1,90 @@
+services:
+
+  bitcoind:
+    image: bitcoin/bitcoin:29.0
+    container_name: bitcoind
+    ports:
+      - "18443:18443"
+    environment:
+      - BITCOIN_DATA=/var/lib/bitcoin-core
+    volumes:
+      - ./.tmp/btcd_data:/var/lib/bitcoin-core
+    command: [
+      "bitcoind",
+      "-regtest=1",
+      "-rpcallowip=0.0.0.0/0",
+      "-datadir=/var/lib/bitcoin-core",
+      "-rpcbind=0.0.0.0",
+      "-rpcport=18443",
+      "-printtoconsole",
+      "-rpcuser=bitcoind_username",
+      "-rpcpassword=bitcoind_password",
+      "-fallbackfee=0.00000001"
+    ]
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=bitcoind_username", "-rpcpassword=bitcoind_password", "-rpcconnect=127.0.0.1", "getblockchaininfo"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  titan:
+    image: ghcr.io/saturnbtc/titan:latest
+    pull_policy: never
+    container_name: titan
+    platform: linux/amd64
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+    ports:
+      - "3030:3030"  # HTTP API
+      - "8080:8080"  # TCP subscriptions
+    environment:
+      - RUST_BACKTRACE=full
+      - BITCOIN_RPC_URL=http://bitcoind:18443
+      - BITCOIN_RPC_USERNAME=bitcoind_username
+      - BITCOIN_RPC_PASSWORD=bitcoind_password
+      - CHAIN=regtest
+      - COMMIT_INTERVAL=5
+      - HTTP_LISTEN=0.0.0.0:3030
+      - TCP_ADDRESS=0.0.0.0:8080
+    volumes:
+      - ./.tmp/titan_data:/home/titan/data
+      - ./.tmp/btcd_data:/var/lib/bitcoin-core
+
+  local_validator:
+    image: ghcr.io/arch-network/local_validator:latest
+    pull_policy: never
+    container_name: local_validator
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+      titan:
+        condition: service_started
+    environment:
+      - RUST_LOG=info,validator=debug
+    command: >
+      /bin/local_validator
+      --network-mode=localnet
+      --rpc-bind-ip=0.0.0.0
+      --rpc-bind-port=9002
+      --titan-endpoint=http://titan:3030
+      --titan-socket-endpoint=titan:8080
+    ports:
+      - "9002:9002"
+
+  auto-mining:
+    image: bitcoin/bitcoin:29.0
+    container_name: auto-mining
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+    volumes:
+      - ./.tmp/btcd_data:/var/lib/bitcoin-core
+    environment:
+      - BITCOIN_DATA=/var/lib/bitcoin-core
+    command: |
+      sh -c "alias bitcoin-cli='bitcoin-cli -rpcuser=bitcoind_username -rpcpassword=bitcoind_password -rpcconnect=bitcoind -rpcport=18443'; \
+        bitcoin-cli createwallet testwallet || true; \
+        bitcoin-cli -regtest -generate 150; \
+        while true; do bitcoin-cli -regtest -generate 1; sleep 5; done"
+

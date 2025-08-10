@@ -1,0 +1,31 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "outdated": "npm outdated --workspaces",
+    "update": "npm update --workspaces"
+  },
+  "dependencies": {
+    "@saturnbtcio/arch-sdk": "^0.0.13"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@noble/curves": "^1.4.0",
+    "@noble/hashes": "^1.4.0",
+    "@solana/web3.js": "^1.95.3",
+    "@types/bn.js": "^5.1.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^9",
+    "prettier": "^3.0.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^2.0.5"
+  },
+  "workspaces": [
+    "examples/arch-token-metadata-tour-ts",
+    "sdks/arch-token-metadata-sdk-ts"
+  ]
+}

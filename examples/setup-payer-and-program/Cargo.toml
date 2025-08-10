@@ -1,0 +1,14 @@
+[package]
+name = "setup-payer-and-program"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+apl-token = { workspace = true, features = ["no-entrypoint"] }
+arch_program.workspace = true
+arch_sdk.workspace = true
+bitcoin = { workspace = true, features = ["serde", "rand"] }
+hex.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["full"] }

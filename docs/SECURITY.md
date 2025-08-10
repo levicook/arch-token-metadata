@@ -30,8 +30,10 @@ Instruction invariants
 
 - UpdateMetadata
 
-  - Accounts: [mint, metadata_pda (writable), update_authority (signer)]
-  - PDA checks as above
+  - Accounts (strict order):
+    - metadata_pda (writable)
+    - update_authority (readonly, signer)
+  - The metadata account must be initialized
   - Stored update_authority must be Some and match signer
   - Field caps re-validated; partial updates only
 
@@ -48,18 +50,22 @@ Instruction invariants
   - Key/value caps: key<=64, value<=240, entries<=32; no empty keys/values
   - Size/creation constraints:
     - Program creates attributes PDA via CPI using invoke_signed with seeds ["attributes", mint, bump]
-    - Allocation should respect runtime per-instruction growth limits (10KB). Allocate minimal required on first creation; later writes must not reallocate
+    - Allocation respects per-instruction growth limits (~10KB). The program allocates the full maximum size upfront to avoid any future reallocation during replacements
   - Not already initialized
 
 - ReplaceAttributes
 
-  - Accounts: [mint, attributes_pda (writable), metadata_pda (readonly), update_authority (signer)]
-  - PDA checks as above
+  - Accounts (strict order):
+    - attributes_pda (writable)
+    - update_authority (readonly, signer)
+    - metadata_pda (readonly)
+  - PDA checks as above (attributes PDA is derived from metadata.mint)
   - Stored update_authority in metadata must be Some and match signer
   - Replace whole vector; caps re-validated (key<=64, value<=240, entries<=32)
   - No reallocation during update; account size must remain unchanged
 
 - TransferAuthority
+
   - Accounts: [metadata_pda (writable), current_update_authority (signer)]
   - Stored update_authority must be Some and match signer
   - Set to new authority (Some)
