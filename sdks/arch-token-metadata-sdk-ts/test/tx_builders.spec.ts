@@ -6,8 +6,8 @@ import {
   type TxCreateTokenWithMetadataParams,
   type TxCreateTokenWithMetadataAndAttributesParams,
   type TxCreateTokenWithFreezeAuthMetadataParams,
-} from "../src/index";
-import { Pubkey } from "../src/serde/pubkey";
+} from "../dist/index.js";
+import { Pubkey } from "../dist/serde/pubkey.js";
 
 function hexToBytes(hex: string): Uint8Array {
   const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
@@ -55,19 +55,20 @@ describe("transaction builders compose upstream instructions correctly", () => {
     };
 
     const ixs = client.createTokenWithMetadataTx(params);
+    const ix0 = ixs[0]!;
+    const ix1 = ixs[1]!;
+    const ix2 = ixs[2]!;
+    const up0 = upstream[0]!;
+    const up1 = upstream[1]!;
     expect(ixs.length).toBe(3);
     // upstream preserved
-    expect(Buffer.from(ixs[0].programId)).toEqual(
-      Buffer.from(upstream[0].programId),
-    );
-    expect(Buffer.from(ixs[1].programId)).toEqual(
-      Buffer.from(upstream[1].programId),
-    );
-    expect(Buffer.from(ixs[0].data)).toEqual(Buffer.from(upstream[0].data));
-    expect(Buffer.from(ixs[1].data)).toEqual(Buffer.from(upstream[1].data));
+    expect(Buffer.from(ix0.programId)).toEqual(Buffer.from(up0.programId));
+    expect(Buffer.from(ix1.programId)).toEqual(Buffer.from(up1.programId));
+    expect(Buffer.from(ix0.data)).toEqual(Buffer.from(up0.data));
+    expect(Buffer.from(ix1.data)).toEqual(Buffer.from(up1.data));
     // last is create metadata with correct data
     const golden = hexToBytes(fixtures.CreateMetadata);
-    expect(Buffer.from(ixs[2].data)).toEqual(Buffer.from(golden));
+    expect(Buffer.from(ix2.data)).toEqual(Buffer.from(golden));
   });
 
   it("createTokenWithMetadataAndAttributesTx: upstream + createMetadata + createAttributes", () => {
@@ -90,19 +91,21 @@ describe("transaction builders compose upstream instructions correctly", () => {
       mintInitializeInstructions: upstream,
     };
     const ixs = client.createTokenWithMetadataAndAttributesTx(params);
+    const ix0 = ixs[0]!;
+    const ix1 = ixs[1]!;
+    const ix2 = ixs[2]!;
+    const ix3 = ixs[3]!;
+    const up0 = upstream[0]!;
+    const up1 = upstream[1]!;
     expect(ixs.length).toBe(4);
     // upstream preserved
-    expect(Buffer.from(ixs[0].programId)).toEqual(
-      Buffer.from(upstream[0].programId),
-    );
-    expect(Buffer.from(ixs[1].programId)).toEqual(
-      Buffer.from(upstream[1].programId),
-    );
+    expect(Buffer.from(ix0.programId)).toEqual(Buffer.from(up0.programId));
+    expect(Buffer.from(ix1.programId)).toEqual(Buffer.from(up1.programId));
     // check tails
     const goldenMd = hexToBytes(fixtures.CreateMetadata);
     const goldenAttrs = hexToBytes(fixtures.CreateAttributes);
-    expect(Buffer.from(ixs[2].data)).toEqual(Buffer.from(goldenMd));
-    expect(Buffer.from(ixs[3].data)).toEqual(Buffer.from(goldenAttrs));
+    expect(Buffer.from(ix2.data)).toEqual(Buffer.from(goldenMd));
+    expect(Buffer.from(ix3.data)).toEqual(Buffer.from(goldenAttrs));
   });
 
   it("createTokenWithFreezeAuthMetadataTx: upstream + clearMintAuth + createMetadata (freeze signer)", () => {
@@ -123,18 +126,20 @@ describe("transaction builders compose upstream instructions correctly", () => {
       clearMintAuthorityInstruction: clearMintAuth,
     };
     const ixs = client.createTokenWithFreezeAuthMetadataTx(params);
+    const ix0 = ixs[0]!;
+    const ix1 = ixs[1]!;
+    const ix2 = ixs[2]!;
+    const ix3 = ixs[3]!;
+    const up0 = upstream[0]!;
+    const up1 = upstream[1]!;
     expect(ixs.length).toBe(4);
     // order: upstream[0], upstream[1], clear, createMd
-    expect(Buffer.from(ixs[0].programId)).toEqual(
-      Buffer.from(upstream[0].programId),
-    );
-    expect(Buffer.from(ixs[1].programId)).toEqual(
-      Buffer.from(upstream[1].programId),
-    );
-    expect(Buffer.from(ixs[2].programId)).toEqual(
+    expect(Buffer.from(ix0.programId)).toEqual(Buffer.from(up0.programId));
+    expect(Buffer.from(ix1.programId)).toEqual(Buffer.from(up1.programId));
+    expect(Buffer.from(ix2.programId)).toEqual(
       Buffer.from(clearMintAuth.programId),
     );
     const goldenMd = hexToBytes(fixtures.CreateMetadata);
-    expect(Buffer.from(ixs[3].data)).toEqual(Buffer.from(goldenMd));
+    expect(Buffer.from(ix3.data)).toEqual(Buffer.from(goldenMd));
   });
 });

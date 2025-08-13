@@ -211,6 +211,7 @@ dependencies = [
  "arch_program",
  "arch_sdk",
  "arch_token_metadata",
+ "async-trait",
  "bitcoin 0.32.5",
 ]
 
@@ -3372,6 +3373,22 @@ dependencies = [
  "serde",
  "thiserror 2.0.12",
  "uuid",
+]
+
+[[package]]
+name = "token-metadata-benches"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arch_program",
+ "arch_sdk",
+ "arch_token_metadata",
+ "arch_token_metadata_sdk",
+ "bitcoin 0.32.5",
+ "dotenvy",
+ "hex",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

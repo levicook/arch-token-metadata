@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+    "benchmarks/*",
     "examples/arch-token-metadata-tour-rs",
     "examples/setup-payer-and-program",
     "program-tests/*",
@@ -27,8 +28,10 @@ arch_token_metadata_sdk = { path = "sdks/arch-token-metadata-sdk-rs" }
 
 # External dependencies
 anyhow = "1"
+async-trait = "0.1"
 bitcoin = "0.32"
 borsh = "1.5"
+dotenvy = "0.15"
 hex = "0.4"
 num-derive = "0.4"
 num-traits = "0.2"

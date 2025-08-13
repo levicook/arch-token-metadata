@@ -65,14 +65,14 @@ const createMint = client.createMintAccountIx(
   payer as any,
   mint as any,
   aplTokenProgramId,
-  2_000_000_000n
+  2_000_000_000n,
 );
 const initMint = client.tokenInitializeMint2Ix(
   aplTokenProgramId,
   mint as any,
   payer as any,
   undefined,
-  9
+  9,
 );
 const createMd = client.createMetadataIx({
   payer: payer as any,
@@ -93,7 +93,7 @@ const instructions: ArchInstruction[] = [createMint, initMint, createMd].map(
       is_writable: a.isWritable,
     })),
     data: ix.data,
-  })
+  }),
 );
 
 // Build + hash message
@@ -101,7 +101,7 @@ const recent = await arch.getBestBlockHash();
 const msg = SanitizedMessageUtil.createSanitizedMessage(
   instructions,
   payer,
-  Buffer.from(recent, "hex")
+  Buffer.from(recent, "hex"),
 );
 if (!(msg as any).header) throw new Error("message compile failed");
 const msgHash = SanitizedMessageUtil.hash(msg as any);

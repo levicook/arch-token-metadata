@@ -355,10 +355,14 @@ impl Processor {
 
         // Validate vector sizes and elements
         if data.len() > MAX_ATTRIBUTES {
-            msg!("Attributes vector size is too long: {}", data.len());
-            return Err(MetadataError::StringTooLong.into());
+            msg!("Too many attributes: {} > {}", data.len(), MAX_ATTRIBUTES);
+            return Err(MetadataError::TooManyAttributes.into());
         }
         for (k, v) in &data {
+            if k.is_empty() || v.is_empty() {
+                msg!("Attribute key and value must be non-empty");
+                return Err(MetadataError::InvalidInstructionData.into());
+            }
             if k.len() > MAX_KEY_LENGTH || v.len() > MAX_VALUE_LENGTH {
                 msg!(
                     "Attribute key or value is too long: key={}/{}, value={}/{}",
@@ -478,9 +482,12 @@ impl Processor {
 
         // Validate sizes
         if data.len() > MAX_ATTRIBUTES {
-            return Err(MetadataError::StringTooLong.into());
+            return Err(MetadataError::TooManyAttributes.into());
         }
         for (k, v) in &data {
+            if k.is_empty() || v.is_empty() {
+                return Err(MetadataError::InvalidInstructionData.into());
+            }
             if k.len() > MAX_KEY_LENGTH || v.len() > MAX_VALUE_LENGTH {
                 return Err(MetadataError::StringTooLong.into());
             }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { TokenMetadataClient } from "../src/index";
-import { Pubkey } from "../src/serde/pubkey";
+import { TokenMetadataClient } from "../dist/index.js";
+import { Pubkey } from "../dist/serde/pubkey.js";
 
 function hexToBytes(hex: string): Uint8Array {
   const clean = hex.startsWith("0x") ? hex.slice(2) : hex;

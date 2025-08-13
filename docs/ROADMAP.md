@@ -30,5 +30,19 @@ Phase 4 – Docs and integration
 
 - Add examples and integration guides
 - Benchmarks and compute/cost sizing guidance
+  - See `docs/benchmarks/README.md`
 - Document e2e test coverage goals in tests
 - Document PDA-only creation for metadata/attributes and attribute sizing rationale (10KB per-instruction growth) (DONE)
+
+Benchmarks
+
+- Add Rust benchmark harness at `benchmarks/token-metadata-benches` to measure CU for:
+  - CreateMetadata
+  - CreateMetadata + CreateAttributes
+  - ReplaceAttributes
+  - UpdateMetadata
+  - TransferAuthority
+  - MakeImmutable
+- Output median/p90 into `docs/benchmarks/*.json`
+- Provide optional compute-budget helpers in Rust SDK for setting CU limit and heap frame
+  - Note: Runtime enforcement pending. Track upstream issue to enable honoring SetComputeUnitLimit/RequestHeapFrame; update SDK docs and examples once live.

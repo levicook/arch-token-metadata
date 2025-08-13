@@ -26,3 +26,7 @@ Troubleshooting:
 - If `launch.sh` stalls, check Docker logs for `bitcoind`, `titan`, and `local_validator`.
 - Ensure `http://localhost:9002` responds to JSON-RPC. The script polls `get_block_count` for readiness.
 - If faucet funding fails, rerun `./examples/launch.sh` to retry.
+
+Compute budget note:
+
+- Both Rust and TS tours optionally prepend compute budget instructions when `CU_UNITS`/`HEAP_BYTES` env vars are set. As of the current runtime, these instructions are not enforced, so effective limits remain the defaults and adding them will not raise the cap. Keep the env flags and helpers for forward-compatibility; behavior will change once runtime enforcement is enabled.

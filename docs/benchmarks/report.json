@@ -1,0 +1,67 @@
+{
+  "create_metadata": {
+    "all": [7456, 7456, 7456, 7456, 7456, 7456, 7456, 7456, 7456, 7456],
+    "iters": 10,
+    "median_cu": 7456,
+    "p90_cu": 7456,
+    "warmup_iters": 2
+  },
+  "create_metadata_and_attributes": {
+    "all": [8477, 8477, 8477, 8477, 8477, 8477, 8477, 8477, 8477, 8477],
+    "iters": 10,
+    "median_cu": 8477,
+    "p90_cu": 8477,
+    "warmup_iters": 2
+  },
+  "full_flows": {
+    "full_create_token_with_freeze_auth_metadata": {
+      "all": [7455, 7455, 7455, 7455, 7455, 7455, 7455, 7455, 7455, 7455],
+      "iters": 10,
+      "median_cu": 7455,
+      "p90_cu": 7455,
+      "warmup_iters": 2
+    },
+    "full_create_token_with_metadata": {
+      "all": [7456, 7456, 7456, 7456, 7456, 7456, 7456, 7456, 7456, 7456],
+      "iters": 10,
+      "median_cu": 7456,
+      "p90_cu": 7456,
+      "warmup_iters": 2
+    },
+    "full_create_token_with_metadata_and_attributes": {
+      "all": [8477, 8477, 8477, 8477, 8477, 8477, 8477, 8477, 8477, 8477],
+      "iters": 10,
+      "median_cu": 8477,
+      "p90_cu": 8477,
+      "warmup_iters": 2
+    }
+  },
+  "make_immutable": {
+    "all": [2065, 2065, 2065, 2065, 2065, 2065, 2065, 2065, 2065, 2065],
+    "iters": 10,
+    "median_cu": 2065,
+    "p90_cu": 2065,
+    "warmup_iters": 2
+  },
+  "replace_attributes": {
+    "all": [5149, 5149, 5149, 5149, 5149, 5149, 5149, 5149, 5149, 5149],
+    "iters": 10,
+    "median_cu": 5149,
+    "p90_cu": 5149,
+    "warmup_iters": 2
+  },
+  "transfer_authority": {
+    "all": [2111, 2111, 2111, 2111, 2111, 2111, 2111, 2111, 2111, 2111],
+    "iters": 10,
+    "median_cu": 2111,
+    "p90_cu": 2111,
+    "warmup_iters": 2
+  },
+  "update_metadata": {
+    "all": [2412, 2412, 2412, 2412, 2412, 2412, 2412, 2412, 2412, 2412],
+    "iters": 10,
+    "median_cu": 2412,
+    "p90_cu": 2412,
+    "warmup_iters": 2
+  }
+}

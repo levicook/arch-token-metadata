@@ -1,7 +1,7 @@
 //! Instruction types
 
 use {
-    arch_program::{instruction::Instruction, program_error::ProgramError, pubkey::Pubkey},
+    arch_program::{program_error::ProgramError, pubkey::Pubkey},
     borsh::{BorshDeserialize, BorshSerialize},
 };
 
@@ -61,31 +61,4 @@ impl MetadataInstruction {
     pub fn pack(&self) -> Vec<u8> {
         borsh::to_vec(self).unwrap()
     }
-}
-
-// Helper functions for creating instructions
-/// Create a metadata instruction
-pub fn create_metadata(
-    program_id: &Pubkey,
-    _mint: &Pubkey,
-    name: String,
-    symbol: String,
-    image: String,
-    description: String,
-    immutable: bool,
-) -> Result<Instruction, ProgramError> {
-    let data = MetadataInstruction::CreateMetadata {
-        name,
-        symbol,
-        image,
-        description,
-        immutable,
-    }
-    .pack();
-
-    Ok(Instruction {
-        program_id: *program_id,
-        accounts: vec![], // Will be filled by processor
-        data,
-    })
 }

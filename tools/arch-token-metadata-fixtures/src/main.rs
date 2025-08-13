@@ -1,14 +1,15 @@
 use anyhow::Context;
+use apl_token;
+use arch_program::account::MIN_ACCOUNT_LAMPORTS;
 use arch_program::program_pack::Pack;
 use arch_program::pubkey::Pubkey;
+use arch_program::system_instruction;
 use arch_token_metadata::{
     find_attributes_pda_with_program, find_metadata_pda_with_program, id as program_id_fn,
     instruction::MetadataInstruction,
+    state::{TokenMetadata, TokenMetadataAttributes},
 };
 use serde_json::json;
-use apl_token;
-use arch_program::account::MIN_ACCOUNT_LAMPORTS;
-use arch_program::system_instruction;
 
 fn main() -> anyhow::Result<()> {
     // Deterministic example inputs
@@ -62,13 +63,8 @@ fn main() -> anyhow::Result<()> {
         apl_token::state::Mint::LEN as u64,
         &token_program_id,
     );
-    let init_mint2 = apl_token::instruction::initialize_mint2(
-        &token_program_id,
-        &mint,
-        &payer,
-        None,
-        9,
-    )?;
+    let init_mint2 =
+        apl_token::instruction::initialize_mint2(&token_program_id, &mint, &payer, None, 9)?;
     let set_mint_auth_none = apl_token::instruction::set_authority(
         &token_program_id,
         &mint,
@@ -111,7 +107,34 @@ fn main() -> anyhow::Result<()> {
         "SystemCreateAccountMint": hex::encode(sys_create_mint.data),
         "TokenInitializeMint2": hex::encode(init_mint2.data),
         "TokenSetAuthorityMintNone": hex::encode(set_mint_auth_none.data),
-        "TokenSetAuthorityMintSome": hex::encode(set_mint_auth_some.data)
+        "TokenSetAuthorityMintSome": hex::encode(set_mint_auth_some.data),
+        // Compute budget fixtures (discriminants are LE u32; 0=RequestHeapFrame, 1=SetComputeUnitLimit)
+        "ComputeBudget": {
+            "ProgramId": hex::encode(arch_program::compute_budget::COMPUTE_BUDGET_PROGRAM_ID),
+            "RequestHeapFrame_64k": hex::encode({
+                let mut v = Vec::new();
+                v.extend_from_slice(&0u32.to_le_bytes());
+                v.extend_from_slice(&(64u32 * 1024).to_le_bytes());
+                v
+            }),
+            "SetComputeUnitLimit_12000": hex::encode({
+                let mut v = Vec::new();
+                v.extend_from_slice(&1u32.to_le_bytes());
+                v.extend_from_slice(&12000u32.to_le_bytes());
+                v
+            })
+        },
+        // Packed account bytes for sample metadata/attributes accounts (LEN-sized, zero-padded)
+        "Sample": {
+            "mint": hex::encode(mint_a),
+            "metadata_account": sample_packed_metadata_hex(mint_a, &payer, &name, &symbol, &image, &description)?,
+            "attributes_account": sample_packed_attributes_hex(mint_a)?,
+        },
+        "Sample2": {
+            "mint": hex::encode(mint_b),
+            "metadata_account": sample_packed_metadata_hex(mint_b, &payer, &name, &symbol, &image, &description)?,
+            "attributes_account": sample_packed_attributes_hex(mint_b)?,
+        }
     });
 
     let out_dir = std::env::var("OUT_FIXTURES_DIR").unwrap_or_else(|_| {
@@ -125,4 +148,37 @@ fn main() -> anyhow::Result<()> {
 
     println!("wrote fixtures to {}", path);
     Ok(())
+}
+
+fn sample_packed_metadata_hex(
+    mint: Pubkey,
+    update_authority: &Pubkey,
+    name: &str,
+    symbol: &str,
+    image: &str,
+    description: &str,
+) -> anyhow::Result<String> {
+    let md = TokenMetadata {
+        is_initialized: true,
+        mint,
+        name: name.to_string(),
+        symbol: symbol.to_string(),
+        image: image.to_string(),
+        description: description.to_string(),
+        update_authority: Some(*update_authority),
+    };
+    let mut buf = vec![0u8; TokenMetadata::LEN];
+    md.pack_into_slice(&mut buf);
+    Ok(hex::encode(buf))
+}
+
+fn sample_packed_attributes_hex(mint: Pubkey) -> anyhow::Result<String> {
+    let attrs = TokenMetadataAttributes {
+        is_initialized: true,
+        mint,
+        data: vec![("k1".into(), "v1".into()), ("k2".into(), "v2".into())],
+    };
+    let mut buf = vec![0u8; TokenMetadataAttributes::LEN];
+    attrs.pack_into_slice(&mut buf);
+    Ok(hex::encode(buf))
 }

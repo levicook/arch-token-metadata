@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist",
+    "pretest": "cargo run -p arch_token_metadata_fixtures",
     "test": "vitest run"
   },
   "dependencies": {
