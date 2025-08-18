@@ -219,7 +219,3 @@ See benchmark notes in `docs/benchmarks/README.md` and `docs/benchmarks/report.j
 ### Notes on compute budget
 
 The SDKs can prepend compute budget instructions (SetComputeUnitLimit, RequestHeapFrame). Current runtime does not enforce these requests yet; effective limits remain defaults. Keep helpers in flows for forward-compatibility.
-
-### License
-
-MIT
