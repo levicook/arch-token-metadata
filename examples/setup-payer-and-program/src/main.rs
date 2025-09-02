@@ -8,9 +8,8 @@ use arch_sdk::{
 use bitcoin::{key::Keypair, secp256k1::Secp256k1, Address, Network};
 
 fn main() -> anyhow::Result<()> {
-    // Connect to local Arch RPC (provided by docker-compose)
-    let rpc_url = std::env::var("ARCH_RPC").unwrap_or_else(|_| "http://localhost:9002".to_string());
-    let client = ArchRpcClient::new(&rpc_url);
+    let config = arch_sdk::Config::localnet();
+    let client = ArchRpcClient::new(&config);
 
     // Generate payer keypair
     let network = Network::Regtest;
@@ -20,7 +19,7 @@ fn main() -> anyhow::Result<()> {
 
     // Fund the payer using faucet (blocking call under the hood)
     client
-        .create_and_fund_account_with_faucet(&payer_kp, network)
+        .create_and_fund_account_with_faucet(&payer_kp)
         .context("faucet funding failed")?;
 
     // Verify balance & top up if needed for program deployment rent
@@ -56,7 +55,7 @@ fn main() -> anyhow::Result<()> {
                 generate_new_keypair(network);
             let program_kp = Keypair::from_secret_key(&secp, &program_ut_kp.secret_key());
 
-            let deployed_id = ProgramDeployer::new(&rpc_url, network)
+            let deployed_id = ProgramDeployer::new(&config)
                 .try_deploy_program(
                     "arch-token-metadata".to_string(),
                     program_kp,
@@ -74,10 +73,9 @@ fn main() -> anyhow::Result<()> {
         .join(".env");
 
     let contents = format!(
-        "PAYER_PRIVKEY={}\nPAYER_PUBKEY={}\nARCH_RPC={}\n{}",
+        "PAYER_PRIVKEY={}\nPAYER_PUBKEY={}\n{}",
         hex::encode(payer_kp.secret_key().secret_bytes()),
         hex::encode(payer_pk),
-        rpc_url,
         program_id_hex
             .as_ref()
             .map(|id| format!("PROGRAM_ID={}\n", id))

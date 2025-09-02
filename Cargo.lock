@@ -67,7 +67,9 @@ dependencies = [
 
 [[package]]
 name = "apl-token"
-version = "0.1.0"
+version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66088314ebf1725d804e63443a4f16e2f7ef964ab2e6e0c924525f578e4a6af7"
 dependencies = [
  "arch_program",
  "arrayref",
@@ -100,7 +102,9 @@ dependencies = [
 
 [[package]]
 name = "arch_program"
-version = "0.5.5"
+version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "283809d104f8451c012aaa1724d25a65e9fd66e3d7c28c1292014e810720db02"
 dependencies = [
  "anyhow",
  "bincode",
@@ -129,7 +133,9 @@ dependencies = [
 
 [[package]]
 name = "arch_sdk"
-version = "0.5.5"
+version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed9ddc719e30b10eedf18cba9c3c66405a7cf51949a5fa4cd8f8e9d872516429"
 dependencies = [
  "anyhow",
  "arch_program",
@@ -155,7 +161,6 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "tracing",
- "tracing-subscriber",
  "uuid",
 ]
 
