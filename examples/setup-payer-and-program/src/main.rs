@@ -1,11 +1,13 @@
-use std::{fs, path::Path};
+use std::{fs, io::Write, path::Path};
 
 use anyhow::{bail, Context};
 use arch_program::bpf_loader::LoaderState;
 use arch_sdk::{
     arch_program::pubkey::Pubkey, generate_new_keypair, ArchRpcClient, ProgramDeployer,
 };
+use arch_token_metadata_elf::ARCH_TOKEN_METADATA_ELF;
 use bitcoin::{key::Keypair, secp256k1::Secp256k1, Address, Network};
+use tempfile::NamedTempFile;
 
 fn main() -> anyhow::Result<()> {
     let config = arch_sdk::Config::localnet();
@@ -37,6 +39,7 @@ fn main() -> anyhow::Result<()> {
             let needed =
                 arch_program::rent::minimum_rent(LoaderState::program_data_offset() + elf.len());
             let target = needed + 2_000_000_000; // buffer for tx fees
+
             while acct.lamports < target {
                 let _ = client.request_airdrop(payer_pk).context("airdrop top-up")?;
                 acct = client
@@ -46,26 +49,23 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Optionally deploy the Arch Token Metadata program if ARCH_METADATA_ELF is provided
-    let mut program_id_hex: Option<String> = None;
-    if let Ok(elf_path) = std::env::var("ARCH_METADATA_ELF") {
-        if !elf_path.is_empty() {
-            // Generate a fresh program keypair and deploy using payer as authority
-            let (program_ut_kp, _program_pk, _): (_, Pubkey, Address) =
-                generate_new_keypair(network);
-            let program_kp = Keypair::from_secret_key(&secp, &program_ut_kp.secret_key());
+    let mut temp_file = NamedTempFile::new()?;
+    temp_file.write_all(ARCH_TOKEN_METADATA_ELF)?;
+    temp_file.flush()?;
 
-            let deployed_id = ProgramDeployer::new(&config)
-                .try_deploy_program(
-                    "arch-token-metadata".to_string(),
-                    program_kp,
-                    payer_kp.clone(),
-                    &elf_path,
-                )
-                .context("deploy program")?;
-            program_id_hex = Some(hex::encode(deployed_id));
-        }
-    }
+    let elf_path = temp_file.path().to_string_lossy().to_string();
+
+    let (program_ut_kp, program_id, _): (_, Pubkey, Address) = generate_new_keypair(network);
+    let program_kp = Keypair::from_secret_key(&secp, &program_ut_kp.secret_key());
+
+    let _deployed_id = ProgramDeployer::new(&config)
+        .try_deploy_program(
+            "arch-token-metadata".to_string(),
+            program_kp,
+            payer_kp.clone(),
+            &elf_path,
+        )
+        .context("deploy program")?;
 
     // Emit .env entries that examples will use
     let env_path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -73,13 +73,10 @@ fn main() -> anyhow::Result<()> {
         .join(".env");
 
     let contents = format!(
-        "PAYER_PRIVKEY={}\nPAYER_PUBKEY={}\n{}",
+        "PAYER_PRIVKEY={}\nPAYER_PUBKEY={}\nARCH_TOKEN_METADATA_PROGRAM_ID={}\n",
         hex::encode(payer_kp.secret_key().secret_bytes()),
         hex::encode(payer_pk),
-        program_id_hex
-            .as_ref()
-            .map(|id| format!("PROGRAM_ID={}\n", id))
-            .unwrap_or_default()
+        hex::encode(program_id)
     );
     fs::write(&env_path, contents).context("write examples/.env")?;
     println!("Wrote {}", env_path.display());

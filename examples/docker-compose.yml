@@ -61,7 +61,7 @@ services:
       - ./.tmp/btcd_data:/var/lib/bitcoin-core
 
   local_validator:
-    image: ghcr.io/arch-network/local_validator:latest
+    image: ghcr.io/arch-network/local_validator:0.5.8
     pull_policy: never
     container_name: local_validator
     depends_on:

@@ -9,6 +9,7 @@ apl-token = { workspace = true, features = ["no-entrypoint"] }
 arch_program.workspace = true
 arch_sdk.workspace = true
 arch_token_metadata = { workspace = true, features = ["no-entrypoint"] }
+arch_token_metadata_elf.workspace = true
 arch_token_metadata_sdk.workspace = true
 bitcoin.workspace = true
 dotenvy = "0.15"

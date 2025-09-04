@@ -3,7 +3,6 @@ use std::str::FromStr;
 use anyhow::Context;
 use arch_program::{hash::Hash, pubkey::Pubkey, sanitized::ArchMessage};
 use arch_sdk::AsyncArchRpcClient;
-use arch_token_metadata::id as metadata_program_id;
 use arch_token_metadata_sdk::{
     CreateAttributesParams, CreateMetadataParams, TokenMetadataClient, TokenMetadataReader,
 };
@@ -21,13 +20,19 @@ async fn main() -> anyhow::Result<()> {
     let payer_hex = std::env::var("PAYER_PUBKEY").context("PAYER_PUBKEY")?;
     let payer = parse_hex32(&payer_hex);
 
-    // Prefer PROGRAM_ID from env if present (deployed by wallet-setup), else use baked id()
-    let program_id: Pubkey = if let Ok(p) = std::env::var("PROGRAM_ID") {
-        let bytes = hex::decode(p)?;
-        Pubkey::from_slice(&bytes)
-    } else {
-        metadata_program_id()
-    };
+    // Require program id from env; no fallback to baked id
+    let program_id_hex = std::env::var("ARCH_TOKEN_METADATA_PROGRAM_ID")
+        .context("ARCH_TOKEN_METADATA_PROGRAM_ID env var is required")?;
+
+    let program_id_bytes = hex::decode(&program_id_hex)
+        .context("ARCH_TOKEN_METADATA_PROGRAM_ID must be hex-encoded")?;
+
+    anyhow::ensure!(
+        program_id_bytes.len() == 32,
+        "ARCH_TOKEN_METADATA_PROGRAM_ID must be 32 bytes (64 hex chars)"
+    );
+
+    let program_id: Pubkey = Pubkey::from_slice(&program_id_bytes);
 
     let client = TokenMetadataClient::new(program_id);
 

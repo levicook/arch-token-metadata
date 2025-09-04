@@ -8,7 +8,9 @@ anyhow.workspace = true
 apl-token = { workspace = true, features = ["no-entrypoint"] }
 arch_program.workspace = true
 arch_sdk.workspace = true
+arch_token_metadata_elf.workspace = true
 bitcoin = { workspace = true, features = ["serde", "rand"] }
 hex.workspace = true
 serde_json.workspace = true
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

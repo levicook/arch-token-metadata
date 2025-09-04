@@ -1,5 +1,3 @@
-pub const ARCH_TOKEN_METADATA_ELF: &[u8] = include_bytes!(std::env!("ARCH_TOKEN_METADATA_SO"));
-
 use arch_program::{
     account::{AccountMeta, MIN_ACCOUNT_LAMPORTS},
     instruction::Instruction,
@@ -11,6 +9,8 @@ use arch_testing::TestContext;
 use arch_token_metadata::find_metadata_pda_with_program;
 use arch_token_metadata::instruction::MetadataInstruction;
 use bitcoin::key::Keypair;
+
+pub const ARCH_TOKEN_METADATA_ELF: &[u8] = arch_token_metadata_elf::ARCH_TOKEN_METADATA_ELF;
 
 pub async fn deploy_token_metadata_program(ctx: &TestContext) -> anyhow::Result<Pubkey> {
     let (deployer_kp, _deployer_pk, _) = ctx.generate_new_keypair();

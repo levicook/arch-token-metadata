@@ -12,6 +12,7 @@ arch_program.workspace = true
 arch_sdk.workspace = true
 arch_testing.workspace = true
 arch_token_metadata = { workspace = true, features = ["no-entrypoint"] }
+arch_token_metadata_elf.workspace = true
 bitcoin.workspace = true
 serial_test.workspace = true
 tokio.workspace = true

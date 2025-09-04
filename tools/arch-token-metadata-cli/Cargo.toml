@@ -1,0 +1,29 @@
+[package]
+name = "arch-token-metadata-cli"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "arch-metadata"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+apl-token = { workspace = true }
+arch_program = { workspace = true }
+arch_sdk = { workspace = true }
+arch_token_metadata = { workspace = true }
+arch_token_metadata_elf = { workspace = true }
+arch_token_metadata_sdk = { workspace = true }
+bitcoin = { workspace = true }
+clap = { version = "4", features = ["derive", "env"] }
+dotenvy = { workspace = true }
+hex = { workspace = true }
+rpassword = "7"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+zeroize = "1.7"

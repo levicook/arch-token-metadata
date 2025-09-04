@@ -15,15 +15,6 @@ echo ""
 
 echo "Generating and funding wallet via wallet-setup example..."
 pushd .. >/dev/null
-# Build SBPF program and export ELF path for deployment (optional)
-SBF_OUT_DIR="$(pwd)/examples/.tmp/.sbf-out"
-mkdir -p "$SBF_OUT_DIR"
-if RUSTFLAGS="-A dead_code" cargo build-sbf --manifest-path programs/arch-token-metadata/Cargo.toml --sbf-out-dir "$SBF_OUT_DIR"; then
-  export ARCH_METADATA_ELF="$SBF_OUT_DIR/arch_token_metadata.so"
-  echo "Built program ELF at $ARCH_METADATA_ELF"
-else
-  echo "Warning: cargo build-sbf failed; proceeding without program deployment"
-fi
 
 cargo run -p setup-payer-and-program
 popd >/dev/null
