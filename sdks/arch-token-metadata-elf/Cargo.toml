@@ -20,3 +20,4 @@ include = [
 name = "arch_token_metadata_elf"
 
 [dependencies]
+arch_program = { workspace = true }

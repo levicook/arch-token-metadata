@@ -118,9 +118,9 @@ struct Cli {
     )]
     rpc: String,
 
-    /// Metadata program id (hex32). Required for metadata operations (optional for token-only ops)
-    #[arg(env = "ARCH_TOKEN_METADATA_PROGRAM_ID", global = true, long)]
-    metadata_program_id: Option<String>,
+    /// Metadata program id (hex32). Defaults to the canonical Arch Token Metadata id
+    #[arg(env = "ARCH_TOKEN_METADATA_PROGRAM_ID", global = true, long, default_value_t = arch_token_metadata::id())]
+    metadata_program_id: Pubkey,
 
     /// Optional compute unit limit
     #[arg(global = true, long)]
@@ -388,13 +388,8 @@ async fn main() -> anyhow::Result<()> {
                         })
                 }
             });
-            let program_id_hex = args
-                .metadata_program_id
-                .as_ref()
-                .context("--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required")?
-                .clone();
             let reader = TokenMetadataReader::new(
-                parse_hex32(&program_id_hex)?,
+                args.metadata_program_id,
                 AsyncArchRpcClient::new(&args.rpc),
             );
             let (md_opt, at_opt) = reader.get_token_details(mint_pk).await?;
@@ -532,11 +527,7 @@ async fn main() -> anyhow::Result<()> {
             payer,
             mint_authority,
         }) => {
-            let program_id =
-                parse_hex32(args.metadata_program_id.as_ref().context(
-                    "--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required",
-                )?)?;
-            let client = TokenMetadataClient::new(program_id);
+            let client = TokenMetadataClient::new(args.metadata_program_id);
 
             let payer_kp = keypair_from_source(&payer.signer)?;
             let payer_pk = pubkey_xonly(&payer_kp);
@@ -607,11 +598,7 @@ async fn main() -> anyhow::Result<()> {
                 }
                 Ok(out)
             }
-            let program_id =
-                parse_hex32(args.metadata_program_id.as_ref().context(
-                    "--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required",
-                )?)?;
-            let client = TokenMetadataClient::new(program_id);
+            let client = TokenMetadataClient::new(args.metadata_program_id);
             let payer_kp = keypair_from_source(&payer.signer)?;
             let payer_pk = pubkey_xonly(&payer_kp);
             let auth_kp = if let Some(spec) = update_authority.as_ref() {
@@ -666,11 +653,7 @@ async fn main() -> anyhow::Result<()> {
             payer,
             update_authority,
         }) => {
-            let program_id =
-                parse_hex32(args.metadata_program_id.as_ref().context(
-                    "--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required",
-                )?)?;
-            let client = TokenMetadataClient::new(program_id);
+            let client = TokenMetadataClient::new(args.metadata_program_id);
             let payer_kp = keypair_from_source(&payer.signer)?;
             let payer_pk = pubkey_xonly(&payer_kp);
             let auth_kp = if let Some(spec) = update_authority.as_ref() {
@@ -733,11 +716,7 @@ async fn main() -> anyhow::Result<()> {
                 }
                 Ok(out)
             }
-            let program_id =
-                parse_hex32(args.metadata_program_id.as_ref().context(
-                    "--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required",
-                )?)?;
-            let client = TokenMetadataClient::new(program_id);
+            let client = TokenMetadataClient::new(args.metadata_program_id);
             let payer_kp = keypair_from_source(&payer.signer)?;
             let payer_pk = pubkey_xonly(&payer_kp);
             let auth_kp = if let Some(spec) = update_authority.as_ref() {
@@ -788,11 +767,7 @@ async fn main() -> anyhow::Result<()> {
             payer,
             current_update_authority,
         }) => {
-            let program_id =
-                parse_hex32(args.metadata_program_id.as_ref().context(
-                    "--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required",
-                )?)?;
-            let client = TokenMetadataClient::new(program_id);
+            let client = TokenMetadataClient::new(args.metadata_program_id);
             let payer_kp = keypair_from_source(&payer.signer)?;
             let payer_pk = pubkey_xonly(&payer_kp);
             let current_kp = if let Some(spec) = current_update_authority.as_ref() {
@@ -842,11 +817,7 @@ async fn main() -> anyhow::Result<()> {
             payer,
             current_update_authority,
         }) => {
-            let program_id =
-                parse_hex32(args.metadata_program_id.as_ref().context(
-                    "--metadata-program-id or ARCH_TOKEN_METADATA_PROGRAM_ID required",
-                )?)?;
-            let client = TokenMetadataClient::new(program_id);
+            let client = TokenMetadataClient::new(args.metadata_program_id);
             let payer_kp = keypair_from_source(&payer.signer)?;
             let payer_pk = pubkey_xonly(&payer_kp);
             let current_kp = if let Some(spec) = current_update_authority.as_ref() {

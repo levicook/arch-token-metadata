@@ -9,10 +9,10 @@ Prebuilt ELF binary for the Arch Token Metadata on-chain program.
 Usage:
 
 ```rust
-use arch_token_metadata_elf::ARCH_TOKEN_METADATA_ELF;
+use arch_token_metadata_elf::{ARCH_TOKEN_METADATA_ELF, PROGRAM_ID};
 
-// ARCH_TOKEN_METADATA_ELF is a `&'static [u8]` of the ELF contents
-let bytes: &[u8] = ARCH_TOKEN_METADATA_ELF;
+let elf_bytes: &[u8] = ARCH_TOKEN_METADATA_ELF;
+let program_id: [u8; 32] = PROGRAM_ID;
 ```
 
 Publishing notes:

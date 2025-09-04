@@ -135,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "arch-token-metadata"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "apl-token",
  "arch_program",
@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "arch-token-metadata-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "apl-token",
@@ -170,11 +170,14 @@ dependencies = [
 
 [[package]]
 name = "arch-token-metadata-elf"
-version = "0.1.0"
+version = "0.1.1"
+dependencies = [
+ "arch_program",
+]
 
 [[package]]
 name = "arch-token-metadata-sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "apl-token",
@@ -187,7 +190,7 @@ dependencies = [
 
 [[package]]
 name = "arch-token-metadata-tests"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "apl-token",
@@ -267,6 +270,8 @@ dependencies = [
 [[package]]
 name = "arch_testing"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba28eca3a0665277c6735808a4ffdc6b5c04bb0416129840c3d38fb2fc811aec"
 dependencies = [
  "anyhow",
  "arch_program",

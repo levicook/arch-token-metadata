@@ -17,7 +17,7 @@ use arch_program::{entrypoint::ProgramResult, program_error::ProgramError, pubke
 
 /// The program ID for the Arch Token Metadata program
 pub fn id() -> Pubkey {
-    Pubkey::from_slice(b"arch-metadata000000000000000000")
+    Pubkey::from_slice(b"ArchTokenMetadata111111111111111")
 }
 
 /// Checks that the supplied program ID is the correct one for Arch Token Metadata

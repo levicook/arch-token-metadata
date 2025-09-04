@@ -594,6 +594,19 @@ impl TokenMetadataClient {
     }
 }
 
+impl Default for TokenMetadataClient {
+    fn default() -> Self {
+        Self {
+            program_id: program::id(),
+        }
+    }
+}
+
+/// Return the canonical default program id for Arch Token Metadata.
+pub fn default_program_id() -> Pubkey {
+    program::id()
+}
+
 // Well-known attribute keys
 pub mod well_known_attributes {
     pub const TWITTER: &str = "twitter";
