@@ -1,13 +1,11 @@
-Arch Token Metadata CLI
-=======================
+# Arch Token Metadata CLI
 
 Secure, ergonomic CLI for interacting with the Arch Token Metadata program.
 
 - No secrets in shell history by default.
 - Mirrors the Rust SDK instruction builders and reader helpers.
 
-Install
--------
+## Install
 
 From workspace root:
 
@@ -15,16 +13,14 @@ From workspace root:
 cargo run -p arch-token-metadata-cli -- --help | cat
 ```
 
-Global options
---------------
+## Global options
 
 - `--rpc` (defaults to `ARCH_RPC` or `http://localhost:9002`)
 - `--program-id` hex32 (defaults to `PROGRAM_ID` else baked id)
 - `--cu-units` u32, `--heap-bytes` u32 (optional)
 - `--json`
 
-Secure signer sources
----------------------
+## Secure signer sources
 
 Provide signers as sources rather than inline keys:
 
@@ -37,8 +33,7 @@ Secrets are never logged; in-memory buffers are zeroized after use.
 
 If a role-specific signer is omitted, it defaults to the payer signer.
 
-Subcommands
------------
+## Subcommands
 
 - `create-metadata --mint HEX --name NAME --symbol SYM --image URI --description DESC [--immutable] --payer SOURCE [--mint-authority SOURCE]`
 - `update-metadata --mint HEX [--name ...] [--symbol ...] [--image ...] [--description ...] --payer SOURCE [--update-authority SOURCE]`
@@ -48,8 +43,7 @@ Subcommands
 - `make-immutable --mint HEX --payer SOURCE [--current-update-authority SOURCE]`
 - Readers: `get-metadata --mint HEX`, `get-attributes --mint HEX`, `get-details --mint HEX`
 
-Examples
---------
+## Examples
 
 Prompt for secrets (nothing stored):
 
@@ -82,10 +76,8 @@ Read and verify:
 arch-metadata get-details --mint cf95c8...d3a4f7 --json
 ```
 
-Notes
------
+## Notes
 
 - Length limits: NAME<=256, SYMBOL<=16, IMAGE<=512, DESCRIPTION<=512.
 - Create requires mint or freeze authority. Update/attributes require update authority.
 - `--cu-units` and `--heap-bytes` are accepted and forwarded, but current runtime may not enforce them yet.
-

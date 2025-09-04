@@ -1,8 +1,22 @@
 [package]
-name = "arch_token_metadata_elf"
+name = "arch-token-metadata-elf"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Prebuilt ELF binary for the Arch Token Metadata program"
+readme = "README.md"
+categories = ["cryptography", "embedded", "no-std"]
+keywords = ["arch", "solana", "sbf", "program", "elf"]
+include = [
+    "Cargo.toml",
+    "README.md",
+    "build.rs",
+    "src/**",
+    "elf/arch_token_metadata.so",
+]
+
+[lib]
+name = "arch_token_metadata_elf"
 
 [dependencies]

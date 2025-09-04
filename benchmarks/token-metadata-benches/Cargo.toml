@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+arch-token-metadata.workspace = true
+arch-token-metadata-sdk.workspace = true
 arch_program = { workspace = true }
 arch_sdk = { workspace = true }
-arch_token_metadata = { workspace = true }
-arch_token_metadata_sdk = { workspace = true }
 bitcoin = { workspace = true }
 dotenvy = { workspace = true }
 hex = { workspace = true }

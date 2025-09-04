@@ -1,15 +1,22 @@
 [package]
-name = "arch_token_metadata_sdk"
+name = "arch-token-metadata-sdk"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Rust SDK for Arch Token Metadata: PDA helpers, instruction builders, readers"
+readme = "README.md"
+keywords = ["arch", "token", "metadata", "sdk"]
+categories = ["cryptography", "api-bindings"]
+
+[lib]
+name = "arch_token_metadata_sdk"
 
 [dependencies]
 anyhow.workspace = true
 apl-token = { workspace = true, features = ["no-entrypoint"] }
+arch-token-metadata = { workspace = true, features = ["no-entrypoint"] }
 arch_program.workspace = true
 arch_sdk.workspace = true
-arch_token_metadata = { workspace = true, features = ["no-entrypoint"] }
 async-trait.workspace = true
 bitcoin.workspace = true

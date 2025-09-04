@@ -1,7 +1,13 @@
 [package]
-name = "arch_token_metadata"
+name = "arch-token-metadata"
 edition.workspace = true
 version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "On-chain program for Arch Token Metadata"
+readme = "README.md"
+keywords = ["arch", "token", "metadata", "program", "sbf"]
+categories = ["cryptography", "embedded", "no-std"]
 
 [dependencies]
 apl-token = { workspace = true, default-features = false, features = ["no-entrypoint"] }

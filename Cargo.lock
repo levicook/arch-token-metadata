@@ -134,16 +134,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "arch-token-metadata"
+version = "0.1.0"
+dependencies = [
+ "apl-token",
+ "arch_program",
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "arch-token-metadata-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "apl-token",
+ "arch-token-metadata",
+ "arch-token-metadata-elf",
+ "arch-token-metadata-sdk",
  "arch_program",
  "arch_sdk",
- "arch_token_metadata",
- "arch_token_metadata_elf",
- "arch_token_metadata_sdk",
  "bitcoin 0.32.5",
  "clap",
  "dotenvy",
@@ -157,16 +169,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "arch-token-metadata-elf"
+version = "0.1.0"
+
+[[package]]
+name = "arch-token-metadata-sdk"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apl-token",
+ "arch-token-metadata",
+ "arch_program",
+ "arch_sdk",
+ "async-trait",
+ "bitcoin 0.32.5",
+]
+
+[[package]]
 name = "arch-token-metadata-tests"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "apl-token",
+ "arch-token-metadata",
+ "arch-token-metadata-elf",
  "arch_program",
  "arch_sdk",
  "arch_testing",
- "arch_token_metadata",
- "arch_token_metadata_elf",
  "bitcoin 0.32.5",
  "serial_test",
  "tokio",
@@ -254,45 +283,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "arch_token_metadata"
-version = "0.1.0"
-dependencies = [
- "apl-token",
- "arch_program",
- "borsh",
- "num-derive",
- "num-traits",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "arch_token_metadata_elf"
-version = "0.1.0"
-
-[[package]]
 name = "arch_token_metadata_fixtures"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "apl-token",
+ "arch-token-metadata",
  "arch_program",
- "arch_token_metadata",
  "borsh",
  "hex",
  "serde_json",
-]
-
-[[package]]
-name = "arch_token_metadata_sdk"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "apl-token",
- "arch_program",
- "arch_sdk",
- "arch_token_metadata",
- "async-trait",
- "bitcoin 0.32.5",
 ]
 
 [[package]]
@@ -301,11 +301,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "apl-token",
+ "arch-token-metadata",
+ "arch-token-metadata-elf",
+ "arch-token-metadata-sdk",
  "arch_program",
  "arch_sdk",
- "arch_token_metadata",
- "arch_token_metadata_elf",
- "arch_token_metadata_sdk",
  "bitcoin 0.32.5",
  "dotenvy",
  "hex",
@@ -3050,9 +3050,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "apl-token",
+ "arch-token-metadata-elf",
  "arch_program",
  "arch_sdk",
- "arch_token_metadata_elf",
  "bitcoin 0.32.5",
  "hex",
  "serde_json",
@@ -3472,10 +3472,10 @@ name = "token-metadata-benches"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "arch-token-metadata",
+ "arch-token-metadata-sdk",
  "arch_program",
  "arch_sdk",
- "arch_token_metadata",
- "arch_token_metadata_sdk",
  "bitcoin 0.32.5",
  "dotenvy",
  "hex",
