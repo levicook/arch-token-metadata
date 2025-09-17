@@ -1,8 +1,8 @@
 use anyhow::Context;
 use apl_token;
-use arch_program::account::MIN_ACCOUNT_LAMPORTS;
 use arch_program::program_pack::Pack;
 use arch_program::pubkey::Pubkey;
+use arch_program::rent::minimum_rent;
 use arch_program::system_instruction;
 use arch_token_metadata::{
     find_attributes_pda_with_program, find_metadata_pda_with_program, id as program_id_fn,
@@ -59,7 +59,7 @@ fn main() -> anyhow::Result<()> {
     let sys_create_mint = system_instruction::create_account(
         &payer,
         &mint,
-        MIN_ACCOUNT_LAMPORTS,
+        minimum_rent(apl_token::state::Mint::LEN),
         apl_token::state::Mint::LEN as u64,
         &token_program_id,
     );

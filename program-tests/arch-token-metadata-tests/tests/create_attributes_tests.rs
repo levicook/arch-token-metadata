@@ -1,6 +1,6 @@
 use arch_program::{
     account::AccountMeta, instruction::Instruction, program_pack::Pack, pubkey::Pubkey,
-    sanitized::ArchMessage, system_instruction,
+    rent::minimum_rent, sanitized::ArchMessage, system_instruction,
 };
 use arch_sdk::Status;
 use arch_testing::TestRunner;
@@ -29,7 +29,7 @@ async fn create_attributes_success_same_tx() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -122,7 +122,7 @@ async fn create_attributes_success_two_txs() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -217,7 +217,7 @@ async fn create_attributes_wrong_authority_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -298,7 +298,7 @@ async fn create_attributes_empty_key_or_value_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -378,7 +378,7 @@ async fn create_attributes_too_many_returns_specific_error() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );

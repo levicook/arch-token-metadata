@@ -8,7 +8,7 @@ use tempfile::NamedTempFile;
 
 use arch_program::{
     compute_budget::ComputeBudgetInstruction, hash::Hash, program_pack::Pack, pubkey::Pubkey,
-    sanitized::ArchMessage,
+    rent::minimum_rent, sanitized::ArchMessage,
 };
 use bitcoin::{
     key::Keypair,
@@ -450,7 +450,7 @@ async fn main() -> anyhow::Result<()> {
             let create_mint_ix = arch_program::system_instruction::create_account(
                 &payer_pk,
                 &mint_pk,
-                arch_program::account::MIN_ACCOUNT_LAMPORTS,
+                minimum_rent(apl_token::state::Mint::LEN),
                 apl_token::state::Mint::LEN as u64,
                 &apl_token::id(),
             );

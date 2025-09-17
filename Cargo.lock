@@ -117,9 +117,9 @@ dependencies = [
 
 [[package]]
 name = "apl-token"
-version = "0.5.8"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "620df08ebb96f65aa957e9185b4bb68b5d9990cb17550294f5946431fd1670f7"
+checksum = "b94afe0e1168b5929b048ad5002fd5d5b4280ea5e0d04b9cd4f2ba090af5887b"
 dependencies = [
  "arch_program",
  "arrayref",
@@ -208,9 +208,9 @@ dependencies = [
 
 [[package]]
 name = "arch_program"
-version = "0.5.8"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2260ffb62964996663287e7f1a527b23ed47ef57464eda3c22ff8d8b6703e22b"
+checksum = "365e8b10dfd87fe2ff8693bf581e323b81a1cd3f3a35fd84b7f31966b6509be5"
 dependencies = [
  "bincode",
  "bitcode",
@@ -237,9 +237,9 @@ dependencies = [
 
 [[package]]
 name = "arch_sdk"
-version = "0.5.8"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59b7ba7358a861fc80c06923631a0da99d8b20bce49002ed49e1b5279a1dd140"
+checksum = "7bddee7a06639b2acec7a5b755fe53fee6737371b64f2d2091102bba5c0cad4a"
 dependencies = [
  "anyhow",
  "arch_program",
@@ -261,6 +261,7 @@ dependencies = [
  "sha256",
  "snafu",
  "thiserror 1.0.69",
+ "titan-client",
  "tokio",
  "tokio-tungstenite",
  "tracing",
@@ -3436,9 +3437,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "titan-client"
-version = "0.1.43"
+version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e3ab7360dfb26701bae21cb447ce5162b9b914fa2cac53871c0f7538e0859ff"
+checksum = "a6cf5ef0c18124f187a8b18a5a29937a5f46012dea11143925694fdea5ee87a8"
 dependencies = [
  "async-trait",
  "bitcoin 0.32.5",
@@ -3456,9 +3457,9 @@ dependencies = [
 
 [[package]]
 name = "titan-types"
-version = "0.1.26"
+version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c846a1ca3dbfff5a61055bf4ce42af8b4c84ee19e9e539d081a5b1011a0fb91d"
+checksum = "acd41b20e33ff1ecb13726da0507df4a40f3888bf9271e6b7d78544ed940f7a7"
 dependencies = [
  "bitcoin 0.32.5",
  "bitcoincore-rpc",

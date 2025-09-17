@@ -1,10 +1,6 @@
 use arch_program::{
-    account::{AccountMeta, MIN_ACCOUNT_LAMPORTS},
-    instruction::Instruction,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    sanitized::ArchMessage,
-    system_instruction,
+    account::AccountMeta, instruction::Instruction, program_pack::Pack, pubkey::Pubkey,
+    rent::minimum_rent, sanitized::ArchMessage, system_instruction,
 };
 use arch_sdk::Status;
 use arch_testing::TestRunner;
@@ -37,7 +33,7 @@ async fn create_metadata_mint_authority_rotation_old_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -122,7 +118,7 @@ async fn create_metadata_mint_authority_rotation_new_succeeds() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -206,7 +202,7 @@ async fn create_metadata_freeze_auth_rejected_when_mint_auth_present() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -271,7 +267,7 @@ async fn create_metadata_no_authority_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -349,7 +345,7 @@ async fn create_metadata_mint_authority_success() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -449,7 +445,7 @@ async fn create_metadata_freeze_authority_success() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -544,7 +540,7 @@ async fn create_metadata_wrong_signer_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -610,7 +606,7 @@ async fn create_metadata_duplicate_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -691,7 +687,7 @@ async fn create_metadata_immutable_success() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -762,7 +758,7 @@ async fn create_metadata_wrong_system_program_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -829,7 +825,7 @@ async fn create_metadata_mint_wrong_owner_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(0),
             0,
             &Pubkey::system_program(),
         );
@@ -887,7 +883,7 @@ async fn create_metadata_uninitialized_mint_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -947,7 +943,7 @@ async fn create_metadata_pda_mismatch_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -963,7 +959,7 @@ async fn create_metadata_pda_mismatch_fails() {
         let create_wrong_meta_ix = system_instruction::create_account(
             &payer_pk,
             &wrong_meta_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(0),
             0,
             &Pubkey::system_program(),
         );
@@ -1027,7 +1023,7 @@ async fn create_metadata_field_caps_exceeded_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -1117,7 +1113,7 @@ async fn create_metadata_image_length_exceeded_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -1183,7 +1179,7 @@ async fn create_metadata_description_length_exceeded_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );

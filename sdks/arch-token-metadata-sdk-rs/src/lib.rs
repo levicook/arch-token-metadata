@@ -10,6 +10,7 @@
 
 use arch_program::compute_budget::ComputeBudgetInstruction;
 use arch_program::program_pack::Pack;
+use arch_program::rent::minimum_rent;
 use arch_program::{
     account::AccountMeta, instruction::Instruction, pubkey::Pubkey, system_instruction,
 };
@@ -241,11 +242,10 @@ impl TokenMetadataClient {
     // Upstream APL Token program helpers
     /// Build a SystemProgram create_account to allocate an APL Token mint account.
     pub fn create_mint_account_ix(&self, payer: Pubkey, mint: Pubkey) -> Instruction {
-        use arch_program::account::MIN_ACCOUNT_LAMPORTS;
         system_instruction::create_account(
             &payer,
             &mint,
-            MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         )
