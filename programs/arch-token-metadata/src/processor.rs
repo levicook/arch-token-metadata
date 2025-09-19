@@ -13,7 +13,7 @@ use {
     },
     apl_token::{self, state::Mint},
     arch_program::{
-        account::{next_account_info, AccountInfo, MIN_ACCOUNT_LAMPORTS},
+        account::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
         msg,
         program::invoke_signed,
@@ -21,6 +21,7 @@ use {
         program_option::COption,
         program_pack::{IsInitialized, Pack},
         pubkey::Pubkey,
+        rent::minimum_rent,
         system_instruction::create_account,
     },
 };
@@ -182,7 +183,7 @@ impl Processor {
             }
 
             let space = TokenMetadata::LEN as u64;
-            let lamports = MIN_ACCOUNT_LAMPORTS;
+            let lamports = minimum_rent(TokenMetadata::LEN);
 
             invoke_signed(
                 &create_account(
@@ -387,7 +388,7 @@ impl Processor {
                 msg!("Payer is not a signer");
                 return Err(ProgramError::MissingRequiredSignature);
             }
-            let lamports = MIN_ACCOUNT_LAMPORTS;
+            let lamports = minimum_rent(required_space as usize);
 
             invoke_signed(
                 &create_account(

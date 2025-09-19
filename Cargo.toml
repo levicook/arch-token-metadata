@@ -19,9 +19,9 @@ repository = "https://github.com/levicook/arch-token-metadata"
 
 [workspace.dependencies]
 # Arch dependencies
-apl-token = { version = "0.5.8", default-features = false }
-arch_program = "0.5.8"
-arch_sdk = "0.5.8"
+apl-token = { version = "0.5.11", default-features = false }
+arch_program = "0.5.11"
+arch_sdk = "0.5.11"
 
 arch_testing = { version = "0.1.0", default-features = false }
 

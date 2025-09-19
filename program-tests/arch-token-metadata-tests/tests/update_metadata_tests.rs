@@ -1,7 +1,7 @@
 use apl_token::instruction::initialize_mint2;
 use arch_program::{
     account::AccountMeta, instruction::Instruction, program_pack::Pack, pubkey::Pubkey,
-    sanitized::ArchMessage, system_instruction,
+    rent::minimum_rent, sanitized::ArchMessage, system_instruction,
 };
 use arch_sdk::Status;
 use arch_testing::TestRunner;
@@ -26,7 +26,7 @@ async fn update_metadata_success() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -283,7 +283,7 @@ async fn update_metadata_wrong_authority_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );
@@ -356,7 +356,7 @@ async fn update_metadata_immutable_fails() {
         let create_mint_ix = system_instruction::create_account(
             &payer_pk,
             &mint_pk,
-            arch_program::account::MIN_ACCOUNT_LAMPORTS,
+            minimum_rent(apl_token::state::Mint::LEN),
             apl_token::state::Mint::LEN as u64,
             &apl_token::id(),
         );

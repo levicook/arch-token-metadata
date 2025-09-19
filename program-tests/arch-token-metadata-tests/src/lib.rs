@@ -1,9 +1,6 @@
 use arch_program::{
-    account::{AccountMeta, MIN_ACCOUNT_LAMPORTS},
-    instruction::Instruction,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    system_instruction,
+    account::AccountMeta, instruction::Instruction, program_pack::Pack, pubkey::Pubkey,
+    rent::minimum_rent, system_instruction,
 };
 use arch_testing::TestContext;
 use arch_token_metadata::find_metadata_pda_with_program;
@@ -32,7 +29,7 @@ pub fn create_and_init_mint_instructions(
     let create_mint_ix = system_instruction::create_account(
         &payer_pk,
         &mint_pk,
-        MIN_ACCOUNT_LAMPORTS,
+        minimum_rent(apl_token::state::Mint::LEN as usize),
         apl_token::state::Mint::LEN as u64,
         &apl_token::id(),
     );
